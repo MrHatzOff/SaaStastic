@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  companies UserCompany[]
+  feedback  Feedback[]
+  logs      EventLog[]
+  
+  @@index([email])
+  @@index([deletedAt])
+}
+
+model Company {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  
+  users       UserCompany[]
+  customers   Customer[]
+  eventLogs   EventLog[]
+  feedbacks   Feedback[]
+  
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+model UserCompany {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  createdBy String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, companyId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+  updatedBy String?
+  
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([email])
+  @@index([deletedAt])
+  @@index([companyId, createdAt])
+}
+
+model EventLog {
+  id        String   @id @default(cuid())
+  action    String
+  metadata  Json?
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@index([companyId, createdAt])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  message   String   @db.Text
+  rating    Int?
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([companyId, createdAt])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
