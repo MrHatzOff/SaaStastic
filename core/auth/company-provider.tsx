@@ -39,24 +39,6 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Detect dev keyless mode from server and then load companies appropriately
-  useEffect(() => {
-    let mounted = true
-    const detectMode = async () => {
-      try {
-        const res = await fetch('/api/health')
-        const json = await res.json()
-        if (mounted && json?.success) {
-          // Always use Clerk authentication - no dev keyless mode
-        }
-      } catch {
-        // Ignore errors, default behavior is Clerk auth
-      }
-    }
-    detectMode()
-    return () => { mounted = false }
-  }, [])
-
   // Load companies when user is available (always use Clerk authentication)
   useEffect(() => {
     if (isLoaded && user) {
@@ -108,8 +90,12 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
         } else if (companiesData.data.length > 0) {
           setCurrentCompany(companiesData.data[0])
         } else {
-          // No companies yet
-          setCurrentCompany(null)
+          // No companies yet - redirect to onboarding for first-time users
+          // But don't redirect if we're already on the onboarding page
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/onboarding')) {
+            window.location.href = '/onboarding/company-setup'
+          }
+          return // Don't set loading to false so user sees loading state during redirect
         }
       }
 
@@ -118,6 +104,32 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
       setError('Failed to load companies')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const createDefaultCompany = async () => {
+    try {
+      // Create a default company for new users
+      const response = await fetch('/api/companies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${user?.firstName || user?.username || 'My'}'s Company`,
+          slug: `company-${user?.id?.slice(0, 8) || 'default'}`,
+          description: 'Default company created on signup',
+        }),
+      })
+
+      if (response.ok) {
+        // Reload companies to get the new one
+        await loadUserCompanies()
+      } else {
+        console.error('Failed to create default company')
+      }
+    } catch (err) {
+      console.error('Failed to create default company:', err)
     }
   }
 
@@ -169,19 +181,16 @@ export function useCompany() {
 }
 
 /**
- * Hook to get current company (throws if no company selected)
+ * Hook to get current company (returns null if no company selected)
  */
 export function useCurrentCompany() {
   const { currentCompany, isLoading } = useCompany()
-  
-  // Don't throw error while still loading
+
+  // Don't return anything while still loading
   if (isLoading) {
     return null
   }
-  
-  if (!currentCompany) {
-    throw new Error('No company selected')
-  }
+
   return currentCompany
 }
 

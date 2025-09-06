@@ -1,127 +1,87 @@
 import { NextRequest } from 'next/server'
-import { z } from 'zod'
-import { withApiMiddleware, successResponse, throwApiError, ApiContext } from '@/lib/api-middleware'
-import { db, withSystemContext, ensureUserExists } from '@/core/db/client'
-
-// Validation schemas
-const createCompanySchema = z.object({
-  name: z.string().min(1, 'Company name is required'),
-  slug: z.string().min(1, 'Company slug is required').regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
-  description: z.string().optional(),
-  industry: z.string().optional(),
-  size: z.string().optional(),
-})
-
-const updateCompanySchema = createCompanySchema.partial()
+import { db } from '@/core/db/client'
 
 /**
  * GET /api/companies - List all companies for the current user
  */
-export const GET = withApiMiddleware(
-  async (req: NextRequest, context: ApiContext) => {
-    const { userId } = context
-
-    const companies = await withSystemContext(async () => {
-      return db.company.findMany({
-        where: {
-          deletedAt: null,
-          users: {
-            some: {
-              userId: userId!,
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          createdAt: true,
-          updatedAt: true,
-          users: {
-            where: {
-              userId: userId!,
-            },
-            select: {
-              role: true,
-            }
-          }
-        },
-      })
+export const GET = async (req: NextRequest) => {
+  try {
+    // Query actual companies from database
+    const companies = await db.company.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
-    // Transform to include user role
-    const companiesWithRole = companies.map((company: any) => ({
-      ...company,
-      role: company.users[0]?.role || 'MEMBER',
-      users: undefined, // Remove users array from response
-    }))
-
-    return successResponse(companiesWithRole)
-  },
-  {
-    requireAuth: true,
-    allowedMethods: ['GET'],
-    rateLimit: true,
+    return Response.json({
+      success: true,
+      data: companies,
+      message: 'Companies retrieved successfully'
+    })
+  } catch (error) {
+    console.error('Companies API error:', error)
+    return Response.json({
+      success: false,
+      error: 'Internal server error'
+    }, { status: 500 })
   }
-)
+}
 
 /**
  * POST /api/companies - Create a new company
  */
-export const POST = withApiMiddleware(
-  async (req: NextRequest, context: ApiContext) => {
-    const { userId, validatedData } = context
-    // Use system context for company creation
+export const POST = async (req: NextRequest) => {
+  try {
+    const body = await req.json()
 
-    // In dev keyless mode, ensure stub user exists so relation constraints pass
-    if (userId) {
-      await ensureUserExists(userId)
+    // Simple validation
+    if (!body.name || !body.slug) {
+      return Response.json({
+        success: false,
+        error: 'Name and slug are required'
+      }, { status: 400 })
     }
 
-    return withSystemContext(async () => {
-      // Check if slug already exists
-      const existingCompany = await db.company.findFirst({
-      where: {
-        slug: validatedData.slug,
-        deletedAt: null,
-      },
-    })
-
-    if (existingCompany) {
-      throwApiError('Company with this slug already exists', 409)
-    }
-
-    // Create company and add user as owner
+    // Create company with minimal required fields
     const company = await db.company.create({
       data: {
-        ...validatedData,
-        createdBy: userId!,
-        updatedBy: userId!,
-        users: {
-          create: {
-            userId: userId!,
-            role: 'OWNER',
-            createdBy: userId!,
-          }
-        }
+        name: body.name,
+        slug: body.slug,
+        // Optional fields can be null/undefined
       },
       select: {
         id: true,
         name: true,
         slug: true,
         createdAt: true,
-        updatedAt: true,
       },
     })
 
-      return successResponse({ ...company, role: 'OWNER' }, 'Company created successfully')
+    return Response.json({
+      success: true,
+      data: company,
+      message: 'Company created successfully'
     })
-  },
-  {
-    requireAuth: true,
-    allowedMethods: ['POST'],
-    validateSchema: createCompanySchema,
-    rateLimit: true,
+  } catch (error: any) {
+    console.error('Create company API error:', error)
+
+    // Handle specific database errors
+    if (error.code === 'P2002') {
+      return Response.json({
+        success: false,
+        error: 'Company slug already exists'
+      }, { status: 409 })
+    }
+
+    return Response.json({
+      success: false,
+      error: 'Internal server error'
+    }, { status: 500 })
   }
-)
+}

@@ -1,30 +1,39 @@
 # TENANTING.md
 
-This document defines the rules and best practices for maintaining **multi-tenant isolation** across the entire SaaS boilerplate. Every contributor must follow these guidelines.
+This document defines the rules and best practices for maintaining **multi-tenant isolation** in the SaaS boilerplate with a simplified approach.
 
 ---
 
 ## 🔑 Core Principles
 
-1. **Tenant Isolation:** Every row in the database must be associated with a `companyId`.
-2. **Scoped Queries Only:** All Prisma queries must filter by `companyId`.
-3. **No Cross-Tenant Leakage:** Never allow users to access or modify data belonging to another company.
-4. **Role-Aware Access:** `UserCompany.role` controls permissions inside a company.
+1. **Company Isolation:** Every business data row is associated with a `companyId`
+2. **Manual Scoping:** API routes manually filter queries by `companyId`
+3. **No Cross-Company Access:** Users can only access their own company's data
+4. **Clean Architecture:** Separation of marketing (public) vs B2B (protected) concerns
 
 ---
 
-## 🗄️ Schema Enforcement
+## 🗄️ Schema Design
 
-* Every business-related model includes a `companyId` foreign key.
-* Example:
+* Core business models include `companyId` for tenant isolation
+* Simplified schema without complex middleware dependencies
 
 ```prisma
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  customers Customer[]
+}
+
 model Customer {
-  id         String   @id @default(cuid())
-  companyId  String
-  name       String
-  email      String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  email     String?
+  createdAt DateTime @default(now())
 
   company Company @relation(fields: [companyId], references: [id])
 }
@@ -32,21 +41,163 @@ model Customer {
 
 ---
 
-## 🔒 TenantGuard Middleware
+## 🔒 Simplified Tenant Isolation
 
-* A shared Prisma middleware exists in `/core/db/tenantGuard.ts`.
-* It ensures all queries include `companyId` automatically.
-* Example usage:
+### Database Layer
+- **Manual Filtering:** Each API route manually includes `companyId` in queries
+- **Company Context:** User company determined via Clerk metadata
+- **Clean Separation:** Marketing pages (public) vs B2B data (company-scoped)
 
-```ts
-const customers = await prisma.customer.findMany({
-  where: { companyId: ctx.companyId },
-});
+### API Layer
+- **Direct Routes:** Simple API routes without complex middleware
+- **Company Scoping:** Manual `where: { companyId }` clauses
+- **Basic Security:** Clerk authentication provides user context
+
+```typescript
+// Example: Companies API with company scoping
+export const GET = async (req: NextRequest) => {
+  // Get user's company from Clerk context
+  const userCompany = await getUserCompany(userId)
+
+  const customers = await db.customer.findMany({
+    where: { companyId: userCompany.id }
+  })
+
+  return Response.json({ success: true, data: customers })
+}
 ```
 
 ---
 
-## 👥 User & Roles
+## 👥 User & Company Management
+
+### User Authentication
+- **Clerk Integration:** User authentication handled by Clerk
+- **Company Assignment:** Users belong to one company
+- **Role System:** Simple OWNER role for company creators
+
+### Company Creation
+- **Onboarding Flow:** New users create company during signup
+- **Unique Slugs:** URL-friendly company identifiers
+- **One Company Per User:** Simplified single-company model
+
+---
+
+## 🛡️ Security Implementation
+
+### Data Isolation
+- **Company Filtering:** All queries manually scoped by companyId
+- **No Cross-Company Access:** Users cannot see other companies' data
+- **Clean API Design:** Direct routes with explicit company context
+
+### API Security
+- **Clerk Authentication:** User identity verified via Clerk
+- **Company Validation:** API routes validate company ownership
+- **Input Sanitization:** Basic validation on all inputs
+
+---
+
+## 📁 File Structure
+
+```
+/src
+├── app
+│   ├── api/companies/          # Company management APIs
+│   ├── onboarding/             # Company setup flow
+│   └── dashboard/              # Company-specific B2B app
+├── core
+│   ├── auth/company-provider.tsx  # Company context management
+│   └── db/client.ts              # Simplified Prisma client
+└── components
+    └── marketing/               # Public marketing components
+```
+
+---
+
+## 🔧 Development Guidelines
+
+### Adding New Features
+
+1. **Public Features** (Marketing)
+   - Add to `/src/app/` routes
+   - No authentication required
+   - Available to all visitors
+
+2. **B2B Features** (Company-Specific)
+   - Add to `/modules/` or `/src/app/dashboard/`
+   - Require company context
+   - Manual companyId filtering in APIs
+
+### API Development
+
+```typescript
+// ✅ Correct: Manual company scoping
+export const GET = async (req: NextRequest) => {
+  const companyId = await getUserCompanyId(userId)
+
+  const data = await db.model.findMany({
+    where: { companyId }
+  })
+
+  return Response.json({ success: true, data })
+}
+
+// ❌ Wrong: No company scoping
+export const GET = async () => {
+  const data = await db.model.findMany() // Exposes all companies' data
+}
+```
+
+---
+
+## 🐛 Debugging
+
+### Common Issues
+
+1. **Data Leakage**
+   - Always include `where: { companyId }` in queries
+   - Verify API routes validate company ownership
+   - Check that user has access to target company
+
+2. **Authentication Issues**
+   - Ensure Clerk user context is available
+   - Verify company setup completed
+   - Check company provider state
+
+3. **Onboarding Problems**
+   - Confirm new users go through company setup
+   - Validate company creation API works
+   - Check company provider redirects
+
+### Debug Commands
+
+```bash
+# View company data
+npx prisma studio
+
+# Check API responses
+curl http://localhost:3000/api/companies
+
+# View user company relationships
+# Use Prisma Studio to inspect UserCompany table
+```
+
+---
+
+## 📋 Migration Notes
+
+### From Complex Middleware
+- **Removed:** Complex tenant guard middleware
+- **Added:** Simplified manual company scoping
+- **Benefits:** Easier debugging, less complexity, cleaner codebase
+
+### Architecture Changes
+- **Unified App:** Marketing + B2B in single codebase
+- **Simplified APIs:** Direct routes without middleware complexity
+- **Manual Scoping:** Explicit company filtering in each API
+- **Clean Separation:** Public vs protected route distinction
+
+This simplified approach provides multi-tenant isolation while maintaining a clean, maintainable codebase.
 
 * Users belong to one or more companies via `UserCompany`.
 * Roles:

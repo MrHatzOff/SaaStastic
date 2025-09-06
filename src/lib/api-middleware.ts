@@ -246,6 +246,19 @@ export function withApiMiddleware(
         userId = authUserId
         companyId = (sessionClaims?.metadata as any)?.companyId || null
 
+        // If companyId not in session claims, try to get it from user metadata
+        if (!companyId && authUserId) {
+          try {
+            const user = await db.user.findUnique({
+              where: { id: authUserId },
+              select: { unsafeMetadata: true }
+            })
+            companyId = (user?.unsafeMetadata as any)?.companyId || null
+          } catch (error) {
+            console.error('Failed to fetch user metadata:', error)
+          }
+        }
+
         if (options.requireCompany && !companyId) {
           return NextResponse.json(
             { success: false, error: 'Company context required' },

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { siteConfig } from '@/lib/site-config'
 import { Menu, X } from 'lucide-react'
@@ -25,7 +26,7 @@ export function Navigation() {
             <span className="text-2xl font-bold text-gray-900">{siteConfig.name}</span>
           </Link>
         </div>
-        
+
         <div className="flex lg:hidden">
           <button
             type="button"
@@ -36,7 +37,7 @@ export function Navigation() {
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
-        
+
         <div className="hidden lg:flex lg:gap-x-12">
           {navigation.map((item) => (
             <Link
@@ -48,17 +49,25 @@ export function Navigation() {
             </Link>
           ))}
         </div>
-        
+
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
-          <Link href="/sign-in">
-            <Button variant="ghost">Sign In</Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button>Get Started</Button>
-          </Link>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <Button variant="ghost">Sign In</Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button>Get Started</Button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard">
+              <Button variant="ghost">Dashboard</Button>
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </nav>
-      
+
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden">
@@ -92,20 +101,27 @@ export function Navigation() {
                   ))}
                 </div>
                 <div className="py-6 space-y-2">
-                  <Link
-                    href="/sign-in"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
+                  <SignedOut>
+                    <SignInButton mode="modal">
+                      <button className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">
+                        Get Started
+                      </button>
+                    </SignUpButton>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link
+                      href="/dashboard"
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                  </SignedIn>
                 </div>
               </div>
             </div>

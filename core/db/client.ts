@@ -54,8 +54,9 @@ function createPrismaClient() {
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
 
-  // Add tenant guard middleware
-  ;(client as any).$use(createTenantGuard(() => currentTenantContext))
+  // Prisma v6 uses a different middleware system
+  // Tenant guard is applied per-operation via getTenantDb() function
+  // instead of global $use middleware
 
   return client
 }

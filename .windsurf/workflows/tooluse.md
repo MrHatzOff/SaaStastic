@@ -5,8 +5,6 @@ auto_execution_mode: 1
 
 # Cascade Tool Usage Guide - Breaking the Read Terminal Loop
 
-You have been attempting to use the wrong tool or worse, maybe even stuck in an infinite loop of failing to do anything because of incorrect tool usage.  Stop Trying to use the same tool over and over again with failing results.  Pause for a moment to read this and consider what tool you need and what tool you are trying to use.
-
 ## 🚨 THE CRITICAL DISTINCTION: Read vs read_terminal
 
 ### ❌ **read_terminal** (WRONG for reading files)
@@ -39,12 +37,17 @@ You have been attempting to use the wrong tool or worse, maybe even stuck in an 
 | **list_dir** | List directory contents | Exploring project structure | `list_dir DirectoryPath="/src/components"` |
 | **search_in_file** | Search within specific file | Finding content in a known file | `search_in_file AbsolutePath="..." Query="search term"` |
 
-### Terminal & Commands
+### Terminal & Commands (PowerShell on Windows)
 | Tool | Purpose | When to Use | Example |
 |------|---------|-------------|---------|
-| **run_command** | Execute terminal commands | Running builds, tests, installations | `run_command CommandLine="npm run dev"` |
+| **run_command** | Execute PowerShell commands | Running builds, tests, installations | `run_command CommandLine="npm run dev" Cwd="C:\\path\\to\\project"` |
 | **read_terminal** | Read terminal output | Checking output from running commands | `read_terminal Name="..." ProcessID="..."` |
 | **command_status** | Check command status | Monitoring async commands | `command_status CommandId="..."` |
+
+**⚠️ CRITICAL: Always use PowerShell syntax on Windows:**
+- Use double quotes for strings with spaces: `"C:\\Program Files\\Node"`
+- Use forward slashes OR escaped backslashes in paths
+- Always specify `Cwd` parameter for proper working directory
 
 ### Development & Deployment
 | Tool | Purpose | When to Use | Example |
@@ -59,6 +62,28 @@ You have been attempting to use the wrong tool or worse, maybe even stuck in an 
 | **create_memory** | Save context | Remembering important information | `create_memory Title="..." Content="..."` |
 | **todo_list** | Manage tasks | Creating/ updating task lists | `todo_list todos=[{...}]` |
 | **trajectory_search** | Search conversation history | Finding previous discussions | `trajectory_search ID="..." Query="..."` |
+
+## 🚨 CRITICAL: ALWAYS VERIFY COMMAND OUTPUT
+
+**❌ FATAL MISTAKE: Running commands without checking results**
+```typescript
+// ❌ WRONG - Running command but not checking if it succeeded
+run_command CommandLine="node verify-script.js"
+// Then immediately proceeding without reading output
+
+// ✅ CORRECT - Always check what happened
+run_command CommandLine="node verify-script.js" Blocking=true
+// READ THE OUTPUT! Check for success/failure indicators
+// Look for error messages, exit codes, expected results
+```
+
+**🔍 VERIFICATION CHECKLIST:**
+1. **Did the command complete successfully?** Look for exit codes, error messages
+2. **Did it produce the expected output?** Check for specific results you need
+3. **Are there any warnings or issues?** Don't ignore warnings that might indicate problems
+4. **If it failed, why?** Read error messages carefully before trying again
+
+**⚠️ NEVER run the same command multiple times without understanding why it failed the first time!**
 
 ## 🚨 COMMON MISTAKES & HOW TO AVOID THEM
 
@@ -85,8 +110,34 @@ read_terminal ProcessID="1234" Name="dev-server"
 // ❌ WRONG - Relative paths don't work
 Read file_path="src/components/Button.tsx"
 
-// ✅ CORRECT - Always use absolute paths
-Read file_path="/full/path/to/project/src/components/Button.tsx"
+// ✅ CORRECT - Always use absolute paths (Windows)
+Read file_path="C:\\Users\\user\\project\\src\\components\\Button.tsx"
+```
+
+### Mistake #4: PowerShell Command Syntax Errors
+```typescript
+// ❌ WRONG - Unix/bash syntax on Windows
+run_command CommandLine="ls -la"
+
+// ✅ CORRECT - PowerShell syntax
+run_command CommandLine="Get-ChildItem -Force"
+
+// ❌ WRONG - Missing working directory
+run_command CommandLine="npm run dev"
+
+// ✅ CORRECT - Specify working directory
+run_command CommandLine="npm run dev" Cwd="C:\\path\\to\\project"
+```
+
+### Mistake #5: Ignoring Command Output
+```typescript
+// ❌ WRONG - Running command and immediately moving on
+run_command CommandLine="node script.js"
+// Next action without checking if script succeeded
+
+// ✅ CORRECT - Check the results
+run_command CommandLine="node script.js" Blocking=true
+// Read the output, check for success/failure before proceeding
 ```
 
 ## 🔄 THE LOOP PREVENTION CHECKLIST
@@ -128,9 +179,43 @@ Need to see file contents?
 4. **Use run_command** for installations, builds, and server starts
 5. **Use read_terminal** only when you have a ProcessID from a previous run_command
 6. **Check command_status** if you used run_command with Blocking=false
+7. **ALWAYS read command output** - Success doesn't mean it did what you expected
+8. **Use PowerShell syntax** on Windows - avoid Unix commands like `ls`, `cat`, `grep`
+9. **Set SafeToAutoRun=true** only for truly safe commands (reading files, checking status)
+10. **Never repeat failed commands** without understanding and fixing the root cause
 
-## 🎯 REMEMBER THIS MANTRA
+## 🎯 REMEMBER THESE MANTRAS
 
 > "Files use Read, terminals use read_terminal, commands use run_command"
 
-**Break the loop: When stuck, ask "Am I reading a file or terminal output?"** 🚀
+> "Every command output must be verified before proceeding"
+
+> "PowerShell on Windows - no bash commands"
+
+**Break the loop: When stuck, ask:**
+1. "Am I reading a file or terminal output?"
+2. "Did I check what the last command actually did?"
+3. "Am I using the right syntax for Windows PowerShell?" 🚀
+
+
+# Welcome
+
+Hello and welcome to our small close-knit team.  Please get onboarded by reading these files and then learning our rules/guidelines from the windsurf rules.
+
+## Must Reads:
+Read these files in order.  You may then read other documentation files referenced in these for further clarification/knowledge, or better yet read and understand some code files to ensure the most accurate and up to date knowledge of our app.
+
+- [LLM_ONBOARDING_GUIDE.md] (C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\docs\LLM_ONBOARDING_GUIDE.md)
+- [schema.prisma](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\prisma\schema.prisma)
+- [CODEMAP.md](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\docs\CODEMAP.md)
+- [API_INDEX.md](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\docs\API_INDEX.md)
+- [README.md](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\README.md)
+
+
+
+## Could Read
+
+These can be read for better understanding of our plan or goals.
+
+- [DEVELOPMENT_ROADMAP.md](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\docs\DEVELOPMENT_ROADMAP.md)
+- [payroll_implementation_task_list.md](C:\Users\danny\CascadeProjects\windsurf-project\TimeTrakrDashboard\docs\payroll\payroll_implementation_task_list.md)
