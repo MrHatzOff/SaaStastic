@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { withApiMiddleware, createApiResponse, ApiContext } from '@/lib/api-middleware'
+import { withApiMiddleware, createApiResponse, ApiContext } from '@/shared/lib/api-middleware'
 
 export const GET = withApiMiddleware(
-  async (req: NextRequest, _context: ApiContext) => {
+  async (_req: NextRequest, _context: ApiContext) => {
     return createApiResponse(true, {
       status: 'ok',
       env: process.env.NODE_ENV,

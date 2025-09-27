@@ -1,14 +1,15 @@
-import { httpRouter } from "convex/server";
+import { NextRequest, NextResponse } from 'next/server'
 
-const http = httpRouter();
-
-http.route({
-  path: "/clerk-webhook",
-  method: "POST",
-  handler: async (req) => {
+export async function POST(_req: NextRequest) {
+  try {
     // Handle Clerk webhooks
-    return new Response("OK", { status: 200 });
-  },
-});
-
-export default http;
+    // TODO: Implement proper webhook verification and processing
+    // TODO: Add proper logging for Clerk webhooks
+    // console.log('Clerk webhook received')
+    
+    return NextResponse.json({ success: true }, { status: 200 })
+  } catch (error) {
+    console.error('Clerk webhook error:', error)
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
+  }
+}

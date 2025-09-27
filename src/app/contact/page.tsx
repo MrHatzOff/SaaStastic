@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Navigation } from '@/components/marketing/navigation'
-import { Footer } from '@/components/marketing/footer'
-import { siteConfig } from '@/lib/site-config'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Navigation } from '@/features/marketing/components/navigation'
+import { Footer } from '@/features/marketing/components/footer'
+import { siteConfig } from '@/shared/lib/site-config'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react'
 
 export default function ContactPage() {
@@ -20,7 +20,8 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // In a real app, this would submit to an API endpoint
-    console.log('Form submitted:', formData)
+    // TODO: Implement actual form submission to API endpoint
+    // console.log('Form submitted:', formData)
     alert('Thank you for your message! We\'ll get back to you soon.')
     setFormData({ name: '', email: '', company: '', subject: '', message: '' })
   }
@@ -44,7 +45,7 @@ export default function ContactPage() {
               Get in Touch
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              Have questions about {siteConfig.name}? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              Have questions about {siteConfig.name}? We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
             </p>
           </div>
         </div>
@@ -61,7 +62,7 @@ export default function ContactPage() {
                 <CardHeader>
                   <CardTitle className="text-2xl">Send us a message</CardTitle>
                   <CardDescription>
-                    Fill out the form below and we'll get back to you within 24 hours.
+                    We&apos;re here to help and answer any question you might have. We&apos;ll respond within 24 hours.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -168,7 +169,7 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-medium text-gray-900">Email</h3>
                       <p className="text-gray-600">{siteConfig.contact.email}</p>
-                      <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
+                      <p className="text-sm text-gray-500">We&apos;ll respond within 24 hours</p>
                     </div>
                   </div>
                   
@@ -218,7 +219,7 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 mb-4">
-                    Looking for quick answers? Check out our FAQ section for common questions about our platform.
+                    We look forward to hearing from you. Quick answers? Check out our FAQ section for common questions about our platform.
                   </p>
                   <a
                     href="/faq"

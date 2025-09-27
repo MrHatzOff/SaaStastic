@@ -1,11 +1,16 @@
 'use client'
 
-import { useCompany, useCurrentCompany } from '@/core/auth/company-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Building2, Users, Settings, BarChart3, Plus } from 'lucide-react'
+import { useCompany, useCurrentCompany } from '@/core/shared'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Building2, Users, Settings, BarChart3, Plus, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { useOnboardingStatus } from '@/shared/hooks/use-onboarding-status'
+import { useRouter } from 'next/navigation'
 
 /**
  * Dashboard Page
@@ -17,6 +22,36 @@ import Link from 'next/link'
 export default function DashboardPage() {
   const { companies, switchCompany, isLoading, error } = useCompany()
   const currentCompany = useCurrentCompany()
+  const searchParams = useSearchParams()
+  const [showSuccess, setShowSuccess] = useState(false)
+  const onboardingStatus = useOnboardingStatus()
+  const router = useRouter()
+
+  // Check for success parameter from Stripe checkout
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setShowSuccess(true)
+      toast.success('🎉 Welcome! Your subscription is now active.')
+      // Remove the success parameter from URL
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [searchParams])
+
+  // Redirect to onboarding if needed
+  useEffect(() => {
+    if (!onboardingStatus.isLoading && onboardingStatus.needsOnboarding) {
+      router.push('/onboarding/company-setup')
+    }
+  }, [onboardingStatus, router])
+
+  // Show loading while checking onboarding status
+  if (onboardingStatus.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -117,6 +152,9 @@ export default function DashboardPage() {
               <Link href="/dashboard/companies" className="text-gray-500 hover:text-gray-700 pb-2 text-sm font-medium">
                 Companies
               </Link>
+              <Link href="/dashboard/team" className="text-gray-500 hover:text-gray-700 pb-2 text-sm font-medium">
+                Team
+              </Link>
             </div>
           </nav>
         </div>
@@ -124,13 +162,32 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Success Banner */}
+        {showSuccess && (
+          <Card className="mb-8 border-green-200 bg-green-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-green-900">
+                    🎉 Subscription Activated!
+                  </h3>
+                  <p className="text-green-700">
+                    Your payment was successful and your subscription is now active. Welcome to SaaStastic!
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Welcome Message */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back!
           </h2>
           <p className="text-gray-600">
-            Here's what's happening with {currentCompany.name} today.
+            Here&apos;s what&apos;s happening with {currentCompany.name} today.
           </p>
         </div>
 
@@ -195,7 +252,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
-                Get started with common tasks
+                Let&apos;s get started with your dashboard.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -211,10 +268,12 @@ export default function DashboardPage() {
                   Manage Companies
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Manage Team
-              </Button>
+              <Link href="/dashboard/team">
+                <Button variant="outline" className="w-full justify-start">
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Team
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 

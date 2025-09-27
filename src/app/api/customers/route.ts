@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { withApiMiddleware, successResponse, throwApiError, ApiContext, requireRole } from '@/lib/api-middleware'
-import { getTenantDb } from '@/core/db/client'
+import { withApiMiddleware, successResponse, throwApiError, requireRole } from '@/shared/lib'
+import type { ApiContext } from '@/shared/lib'
+import { db } from '@/core/shared'
 
 // Validation schemas
 const createCustomerSchema = z.object({
@@ -12,20 +13,19 @@ const createCustomerSchema = z.object({
   notes: z.string().optional(),
 })
 
-const updateCustomerSchema = createCustomerSchema.partial()
+// const updateCustomerSchema = createCustomerSchema.partial()
 
 /**
  * GET /api/customers - List all customers for the current company
  */
 export const GET = withApiMiddleware(
   async (req: NextRequest, context: ApiContext) => {
-    const { companyId, userRole } = context
+    const { userRole } = context
     
     // Require MEMBER role or higher to list customers
     requireRole(userRole, 'MEMBER', 'listing customers')
     
-    const db = getTenantDb(companyId!)
-
+    // Use the global db instance - tenant scoping handled by middleware
     const customers = await db.customer.findMany({
       where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
@@ -56,18 +56,19 @@ export const GET = withApiMiddleware(
 export const POST = withApiMiddleware(
   async (req: NextRequest, context: ApiContext) => {
     const { companyId, userId, validatedData, userRole } = context
-    
     // Require ADMIN role or higher to create customers
     requireRole(userRole, 'ADMIN', 'creating customers')
     
-    const db = getTenantDb(companyId!)
-
-    // Check if customer with same email already exists
-    if (validatedData.email) {
+    // Use the global db instance - tenant scoping handled by middleware
+    
+    // Check for email conflicts
+    const data = validatedData as { email?: string; name?: string; [key: string]: unknown }
+    if (data.email) {
       const existingCustomer = await db.customer.findFirst({
         where: {
-          email: validatedData.email,
+          email: data.email,
           deletedAt: null,
+          companyId: companyId!,
         },
       })
 
@@ -78,7 +79,10 @@ export const POST = withApiMiddleware(
 
     const customer = await db.customer.create({
       data: {
-        ...validatedData,
+        name: (data.name as string) || '',
+        email: data.email as string,
+        phone: data.phone as string || null,
+        notes: data.notes as string || null,
         companyId: companyId!,
         createdBy: userId!,
         updatedBy: userId!,

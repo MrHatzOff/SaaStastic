@@ -1,8 +1,8 @@
-import { Navigation } from '@/components/marketing/navigation'
-import { HeroSection } from '@/components/marketing/hero-section'
-import { FeaturesSection } from '@/components/marketing/features-section'
-import { PricingSection } from '@/components/marketing/pricing-section'
-import { Footer } from '@/components/marketing/footer'
+import { Navigation } from '@/features/marketing/components/navigation'
+import { HeroSection } from '@/features/marketing/components/hero-section'
+import { FeaturesSection } from '@/features/marketing/components/features-section'
+import { PricingSection } from '@/features/marketing/components/pricing-section'
+import { Footer } from '@/features/marketing/components/footer'
 
 export default function Home() {
   return (

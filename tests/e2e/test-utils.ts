@@ -27,10 +27,10 @@ export const TEST_USERS = {
 export const test = base.extend<{
   authenticatedPage: Page
 }>({
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }, testUse) => {
     // This would need to be implemented with Clerk Test mode
     // For now, just return the page
-    await use(page)
+    await testUse(page)
   }
 })
 
@@ -56,7 +56,7 @@ export async function authenticateAs(page: Page, userRole: keyof typeof TEST_USE
 /**
  * Helper to verify API response contains expected data
  */
-export async function verifyApiResponse(response: any, expectedStatus: number = 200) {
+export async function verifyApiResponse(response: { ok: () => boolean; status: () => number; json: () => Promise<unknown> }, expectedStatus: number = 200) {
   expect(response.ok()).toBe(true)
   expect(response.status()).toBe(expectedStatus)
 
@@ -69,7 +69,8 @@ export async function verifyApiResponse(response: any, expectedStatus: number = 
  * Helper to test role-based access control
  */
 export async function testRoleAccess(page: Page, endpoint: string, method: string, expectedStatus: number) {
-  const response = await page.request[method.toLowerCase()](endpoint)
+  const requestMethod = method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
+  const response = await page.request[requestMethod](endpoint)
   expect(response.status()).toBe(expectedStatus)
 }
 

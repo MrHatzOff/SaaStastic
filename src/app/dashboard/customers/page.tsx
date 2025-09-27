@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useCurrentCompany } from '@/core/auth/company-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useCurrentCompany } from '@/core/shared'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Button } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/badge'
 import { Plus, Mail, Phone, MapPin, Trash2, Edit } from 'lucide-react'
-import { CustomerFormModal } from '@/components/customers/customer-form-modal'
+import { CustomerFormModal } from '@/features/customers/customer-form-modal'
 
 interface Customer {
   id: string
@@ -115,26 +115,50 @@ export default function CustomersPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header with Navigation */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-              <p className="text-sm text-gray-500">
-                Manage customers for {currentCompany.name}
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="h-8 w-8 text-blue-600">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{currentCompany.name}</h1>
+                <p className="text-sm text-gray-500">@{currentCompany.slug}</p>
+              </div>
             </div>
+            
             <Button onClick={handleAddCustomer}>
               <Plus className="h-4 w-4 mr-2" />
               Add Customer
             </Button>
           </div>
+          
+          {/* Navigation */}
+          <nav className="border-t border-gray-200">
+            <div className="flex space-x-8 py-4">
+              <a href="/dashboard" className="text-gray-500 hover:text-gray-700 pb-2 text-sm font-medium">
+                Dashboard
+              </a>
+              <span className="text-blue-600 border-b-2 border-blue-600 pb-2 text-sm font-medium">
+                Customers
+              </span>
+              <a href="/dashboard/companies" className="text-gray-500 hover:text-gray-700 pb-2 text-sm font-medium">
+                Companies
+              </a>
+              <a href="/dashboard/team" className="text-gray-500 hover:text-gray-700 pb-2 text-sm font-medium">
+                Team
+              </a>
+            </div>
+          </nav>
         </div>
       </div>
 

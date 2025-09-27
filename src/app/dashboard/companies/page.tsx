@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useCompany } from '@/core/auth/company-provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useCompany } from '@/core/shared'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Button } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/badge'
 import { Plus, Building2, Users, Settings, Trash2, Edit } from 'lucide-react'
-import { CompanyFormModal } from '@/components/companies/company-form-modal'
+import { CompanyFormModal } from '@/features/companies/company-form-modal'
 
 interface Company {
   id: string
@@ -43,8 +43,8 @@ export default function CompaniesPage() {
       } else {
         setError(data.error || 'Failed to fetch companies')
       }
-    } catch (err) {
-      setError('Network error')
+    } catch (_err) {
+      console.error('Failed to fetch companies:', _err)
     } finally {
       setLoading(false)
     }

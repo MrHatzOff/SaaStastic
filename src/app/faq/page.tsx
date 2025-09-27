@@ -1,7 +1,7 @@
-import { Navigation } from '@/components/marketing/navigation'
-import { Footer } from '@/components/marketing/footer'
-import { siteConfig } from '@/lib/site-config'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Navigation } from '@/features/marketing/components/navigation'
+import { Footer } from '@/features/marketing/components/footer'
+import { siteConfig } from '@/shared/lib/site-config'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
 export default function FAQPage() {
   return (
@@ -16,7 +16,7 @@ export default function FAQPage() {
               Frequently Asked Questions
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              Everything you need to know about {siteConfig.name} and our multi-tenant SaaS boilerplate.
+              Can I upgrade or downgrade my plan at any time? {siteConfig.name} and our multi-tenant SaaS boilerplate.
             </p>
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function FAQPage() {
               Still have questions?
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              Can't find the answer you're looking for? Please reach out to our friendly team.
+              What&apos;s included in the free plan? Please reach out to our friendly team.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

@@ -21,6 +21,7 @@ model User {
   companies UserCompany[]
   feedback  Feedback[]
   logs      EventLog[]
+  invitations UserInvitation[]
   
   @@index([email])
   @@index([deletedAt])
@@ -36,29 +37,46 @@ model Company {
   createdBy   String?
   updatedBy   String?
   
+  // Billing fields
+  stripeCustomerId     String?      @unique
+  stripeSubscriptionId String?      @unique
+  
   users       UserCompany[]
   customers   Customer[]
   eventLogs   EventLog[]
   feedbacks   Feedback[]
+  subscription Subscription?
+  invoices    Invoice[]
+  paymentMethods PaymentMethod[]
+  usageRecords UsageRecord[]
+  invitations UserInvitation[]
+  roles       RoleModel[]
   
   @@index([slug])
   @@index([deletedAt])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
 }
 
 model UserCompany {
   id        String   @id @default(cuid())
   userId    String
   companyId String
-  role      Role     @default(MEMBER)
+  roleId    String?  // New: Reference to Role model
+  role      Role     @default(MEMBER) // Keep for backward compatibility during migration
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   createdBy String?
+  updatedBy String?
   
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  roleRef   RoleModel? @relation(fields: [roleId], references: [id], onDelete: SetNull)
   
   @@unique([userId, companyId])
   @@index([companyId])
   @@index([userId])
+  @@index([roleId])
 }
 
 model Customer {
@@ -89,6 +107,8 @@ model EventLog {
   userId    String
   companyId String
   createdAt DateTime @default(now())
+  ipAddress String?
+  userAgent String?
   
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -117,8 +137,186 @@ model Feedback {
   @@index([companyId, createdAt])
 }
 
+model Subscription {
+  id                   String   @id @default(cuid())
+  companyId            String   @unique
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  stripeProductId      String
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  canceledAt           DateTime?
+  trialStart           DateTime?
+  trialEnd             DateTime?
+  metadata             Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  createdBy            String?
+  updatedBy            String?
+  
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+}
+
+model Invoice {
+  id                String   @id @default(cuid())
+  companyId         String
+  stripeInvoiceId   String   @unique
+  invoiceNumber     String?
+  amountDue         Int      // Amount in cents
+  amountPaid        Int      // Amount in cents
+  currency          String   @default("usd")
+  status            InvoiceStatus
+  dueDate           DateTime?
+  paidAt            DateTime?
+  periodStart       DateTime
+  periodEnd         DateTime
+  invoicePdf        String?
+  hostedInvoiceUrl  String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([stripeInvoiceId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([companyId, createdAt])
+}
+
+model PaymentMethod {
+  id                    String   @id @default(cuid())
+  companyId             String
+  stripePaymentMethodId String   @unique
+  type                  String   // card, bank_account, etc.
+  card                  Json?    // Card details (last4, brand, exp_month, exp_year)
+  isDefault             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  createdBy             String?
+  updatedBy             String?
+  
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([stripePaymentMethodId])
+  @@index([isDefault])
+}
+
+model UsageRecord {
+  id              String   @id @default(cuid())
+  companyId       String
+  metric          String   // e.g., "api_calls", "storage_gb", "team_members"
+  quantity        Int
+  timestamp       DateTime @default(now())
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([metric])
+  @@index([timestamp])
+  @@index([companyId, metric, timestamp])
+}
+
+model UserInvitation {
+  id          String   @id @default(cuid())
+  email       String
+  companyId   String
+  roleId      String?  // New: Reference to RoleModel
+  role        Role     @default(MEMBER) // Keep for backward compatibility
+  token       String   @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  invitedBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  inviter     User     @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  roleRef     RoleModel? @relation("InvitationRole", fields: [roleId], references: [id], onDelete: SetNull)
+  
+  @@unique([email, companyId])
+  @@index([companyId])
+  @@index([token])
+  @@index([email])
+  @@index([expiresAt])
+  @@index([roleId])
+}
+
+// RBAC System Models
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., 'org:view', 'billing:update'
+  name        String   // e.g., 'View Organization'
+  description String?
+  category    String   // e.g., 'Organization', 'Billing', 'Team'
+  isSystem    Boolean  @default(false) // System permissions cannot be modified
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  roles       RoleModel[] @relation("RolePermissions")
+  
+  @@index([category])
+  @@index([isSystem])
+  @@map("permissions")
+}
+
+model RoleModel {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isSystem    Boolean  @default(false) // System roles cannot be modified
+  companyId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  
+  // Relationships
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  permissions Permission[] @relation("RolePermissions")
+  userCompanies UserCompany[]
+  invitations UserInvitation[] @relation("InvitationRole")
+  
+  @@unique([name, companyId])
+  @@index([companyId])
+  @@index([isSystem])
+  @@map("roles")
+}
+
 enum Role {
   OWNER
   ADMIN
   MEMBER
+  VIEWER
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  PAST_DUE
+  TRIALING
+  UNPAID
+  PAUSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  UNCOLLECTIBLE
+  VOID
 }

@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
-import { withApiMiddleware, successResponse, throwApiError, ApiContext } from '@/lib/api-middleware'
+import { withApiMiddleware, successResponse, throwApiError, ApiContext } from '@/shared/lib/api-middleware'
 import { db, withSystemContext } from '@/core/db/client'
 
 // Validation schemas
@@ -101,10 +102,11 @@ export const PUT = withApiMiddleware(
       }
 
       // Check for slug conflicts if slug is being updated
-      if (validatedData.slug && validatedData.slug !== existingCompany.slug) {
+      const data = validatedData as { slug?: string; name?: string; [key: string]: unknown }
+      if (data.slug && data.slug !== existingCompany.slug) {
         const slugConflict = await db.company.findFirst({
           where: {
-            slug: validatedData.slug,
+            slug: data.slug,
             id: { not: companyId },
             deletedAt: null,
           },
@@ -118,7 +120,7 @@ export const PUT = withApiMiddleware(
       const company = await db.company.update({
         where: { id: companyId },
         data: {
-          ...validatedData,
+          ...data,
           updatedBy: userId!,
           updatedAt: new Date(),
         },

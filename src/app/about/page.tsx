@@ -1,7 +1,7 @@
-import { Navigation } from '@/components/marketing/navigation'
-import { Footer } from '@/components/marketing/footer'
-import { siteConfig } from '@/lib/site-config'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Navigation } from '@/features/marketing/components/navigation'
+import { Footer } from '@/features/marketing/components/footer'
+import { siteConfig } from '@/shared/lib/site-config'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
 export default function AboutPage() {
   return (
@@ -16,7 +16,7 @@ export default function AboutPage() {
               About {siteConfig.name}
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              We're building the future of SaaS development with secure, scalable, and easy-to-use multi-tenant boilerplates.
+              We&apos;re building the future of SaaS development with secure, scalable, and easy-to-use multi-tenant boilerplates.
             </p>
           </div>
         </div>
@@ -102,8 +102,8 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
               Built with Modern Technology
             </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              We use the latest and most reliable technologies to ensure your success
+            <p className="text-lg text-muted-foreground mb-8">
+              We&apos;re building the future of SaaS applications with modern tools and best practices.
             </p>
           </div>
           

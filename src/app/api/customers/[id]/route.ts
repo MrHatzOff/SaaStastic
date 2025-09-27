@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { withApiMiddleware, successResponse, throwApiError, ApiContext, requireRole } from '@/lib/api-middleware'
+import { withApiMiddleware, successResponse, throwApiError, ApiContext, requireRole } from '@/shared/lib/api-middleware'
 import { getTenantDb } from '@/core/db/client'
 
 // Validation schemas
@@ -81,10 +81,11 @@ export const PUT = withApiMiddleware(
     }
 
     // Check for email conflicts if email is being updated
-    if (validatedData.email && validatedData.email !== existingCustomer.email) {
+    const data = validatedData as { email?: string; name?: string; [key: string]: unknown }
+    if (data.email && data.email !== existingCustomer.email) {
       const emailConflict = await db.customer.findFirst({
         where: {
-          email: validatedData.email,
+          email: data.email,
           id: { not: customerId },
           deletedAt: null,
         },
@@ -98,7 +99,7 @@ export const PUT = withApiMiddleware(
     const customer = await db.customer.update({
       where: { id: customerId },
       data: {
-        ...validatedData,
+        ...data,
         updatedBy: userId!,
         updatedAt: new Date(),
       },
