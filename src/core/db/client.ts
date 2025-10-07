@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+import { provisionSystemRolesForCompany } from '@/core/rbac/provisioner'
+import { SYSTEM_ROLE_SLUGS } from '@/core/rbac/default-roles'
 import { createTenantGuard, type TenantContext } from './tenant-guard'
 
 /**
@@ -165,12 +167,20 @@ export async function createCompanyWithOwner(
         }
       })
 
+      const { roles } = await provisionSystemRolesForCompany(company.id, tx)
+      const ownerRoleId = roles.find((role) => role.slug === SYSTEM_ROLE_SLUGS.OWNER)?.roleId
+
+      if (!ownerRoleId) {
+        throw new Error('Failed to provision Owner role during company creation')
+      }
+
       // Add user as owner
       await tx.userCompany.create({
         data: {
           userId,
           companyId: company.id,
           role: 'OWNER',
+          roleId: ownerRoleId,
           createdBy: userId
         }
       })

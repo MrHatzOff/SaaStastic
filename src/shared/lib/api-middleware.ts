@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
 import { Ratelimit } from '@upstash/ratelimit'
@@ -244,38 +244,64 @@ export function withApiMiddleware(
 
       // Authentication
       if (options.requireAuth || options.requireCompany) {
-        const authResult = await auth()
-        const authUserId = authResult.userId
-        const sessionClaims = authResult.sessionClaims
-
-        if (!authUserId) {
-          return NextResponse.json(
-            { success: false, error: 'Authentication required' },
-            { status: 401 }
-          )
-        }
-
-        userId = authUserId
-        companyId = (sessionClaims?.metadata as { companyId?: string })?.companyId || null
-
-        // If companyId not in session claims, try to get it from user companies
-        if (!companyId && authUserId) {
-          try {
-            const userCompany = await db.userCompany.findFirst({
-              where: { userId: authUserId },
-              select: { companyId: true },
-              orderBy: { createdAt: 'desc' }
-            })
-            companyId = userCompany?.companyId || null
-          } catch (error) {
-            console.error('Failed to fetch user company:', error)
+        try {
+          // CRITICAL FIX: In Clerk 6.x with Next.js 15 App Router,
+          // auth() returns a Promise in API routes that must be awaited
+          const authData = await auth()
+          
+          // Extract userId from auth data
+          const authUserId = authData?.userId || null
+          
+          if (!authUserId) {
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Authentication required',
+                code: 'UNAUTHENTICATED'
+              },
+              { status: 401 }
+            )
           }
-        }
 
-        if (options.requireCompany && !companyId) {
+          userId = authUserId
+          
+          // Don't try to get companyId from metadata yet - let it be fetched from database
+          companyId = null
+
+          // If companyId still not found, try to get it from user companies
+          if (!companyId && authUserId) {
+            try {
+              const userCompany = await db.userCompany.findFirst({
+                where: { userId: authUserId },
+                select: { companyId: true },
+                orderBy: { createdAt: 'desc' }
+              })
+              companyId = userCompany?.companyId || null
+            } catch (error) {
+              console.error('Failed to fetch user company:', error)
+              // Don't fail the request if we can't fetch the company
+            }
+          }
+
+          if (options.requireCompany && !companyId) {
+            return NextResponse.json(
+              { 
+                success: false, 
+                error: 'Company context required',
+                code: 'COMPANY_REQUIRED'
+              },
+              { status: 403 }
+            )
+          }
+        } catch (error) {
+          console.error('Authentication error:', error)
           return NextResponse.json(
-            { success: false, error: 'Company context required' },
-            { status: 403 }
+            { 
+              success: false, 
+              error: 'Authentication failed',
+              code: 'AUTH_ERROR'
+            },
+            { status: 401 }
           )
         }
 

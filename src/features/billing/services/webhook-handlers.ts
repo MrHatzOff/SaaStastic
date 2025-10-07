@@ -5,7 +5,7 @@ import { StripeService } from './stripe-service';
 import type { HandledStripeEvent } from '../types/billing-types';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2025-09-30.clover',
   typescript: true,
 });
 
@@ -301,8 +301,8 @@ export class WebhookHandlers {
   ): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
     
-    // Only process invoices with subscription
-    if (!invoice.subscription) return;
+    // Sync invoice to database
+    // Invoice metadata contains companyId in Stripe v19
 
     await StripeService.syncInvoiceToDatabase(invoice);
   }
@@ -318,8 +318,7 @@ export class WebhookHandlers {
     await StripeService.syncInvoiceToDatabase(invoice);
 
     // Send invoice email
-    const companyId = invoice.metadata?.companyId || 
-                      invoice.subscription_details?.metadata?.companyId;
+    const companyId = invoice.metadata?.companyId;
     
     if (companyId && invoice.hosted_invoice_url) {
       // await EmailService.sendInvoice(companyId, invoice.hosted_invoice_url);
@@ -336,8 +335,7 @@ export class WebhookHandlers {
     
     await StripeService.syncInvoiceToDatabase(invoice);
 
-    const companyId = invoice.metadata?.companyId || 
-                      invoice.subscription_details?.metadata?.companyId;
+    const companyId = invoice.metadata?.companyId;
 
     if (companyId) {
       // Log successful payment
@@ -376,8 +374,7 @@ export class WebhookHandlers {
     
     await StripeService.syncInvoiceToDatabase(invoice);
 
-    const companyId = invoice.metadata?.companyId || 
-                      invoice.subscription_details?.metadata?.companyId;
+    const companyId = invoice.metadata?.companyId;
 
     if (companyId) {
       // Log failed payment
@@ -418,8 +415,7 @@ export class WebhookHandlers {
   ): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
     
-    const companyId = invoice.metadata?.companyId || 
-                      invoice.subscription_details?.metadata?.companyId;
+    const companyId = invoice.metadata?.companyId;
 
     if (companyId) {
       // Send email requiring payment action (3D Secure, etc.)

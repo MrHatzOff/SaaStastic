@@ -44,15 +44,26 @@ export function withPermissions<T = unknown>(
         );
       }
 
-      // Get company context from headers or query params
-      const companyId = req.headers.get('x-company-id') || 
-                       req.nextUrl.searchParams.get('companyId');
+      // Get company context from headers, query params, or user's default company
+      let companyId = req.headers.get('x-company-id') || 
+                      req.nextUrl.searchParams.get('companyId');
 
+      // If no companyId provided, get user's first company (most common case)
       if (!companyId) {
-        return NextResponse.json(
-          { error: 'Company context required' },
-          { status: 400 }
-        );
+        const userCompanyRecord = await db.userCompany.findFirst({
+          where: { userId },
+          select: { companyId: true },
+          orderBy: { createdAt: 'desc' }
+        });
+        
+        companyId = userCompanyRecord?.companyId || null;
+        
+        if (!companyId) {
+          return NextResponse.json(
+            { error: 'Company context required. User does not belong to any company.' },
+            { status: 400 }
+          );
+        }
       }
 
       // Verify user belongs to company and get their role
@@ -129,7 +140,11 @@ export function withPermissions<T = unknown>(
         userId,
         companyId,
         permissions: userPermissions,
-        user: userCompany.user,
+        user: {
+          id: userCompany.user.id,
+          email: userCompany.user.email,
+          name: userCompany.user.name || undefined
+        },
         company: userCompany.company,
       };
 

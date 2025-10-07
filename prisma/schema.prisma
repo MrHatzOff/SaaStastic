@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,47 +8,43 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  
-  companies UserCompany[]
-  feedback  Feedback[]
-  logs      EventLog[]
+  id          String           @id @default(cuid())
+  email       String           @unique
+  name        String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+  logs        EventLog[]
+  feedback    Feedback[]
+  companies   UserCompany[]
   invitations UserInvitation[]
-  
+
   @@index([email])
   @@index([deletedAt])
 }
 
 model Company {
-  id          String       @id @default(cuid())
-  name        String
-  slug        String       @unique
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
-  createdBy   String?
-  updatedBy   String?
-  
-  // Billing fields
-  stripeCustomerId     String?      @unique
-  stripeSubscriptionId String?      @unique
-  
-  users       UserCompany[]
-  customers   Customer[]
-  eventLogs   EventLog[]
-  feedbacks   Feedback[]
-  subscription Subscription?
-  invoices    Invoice[]
-  paymentMethods PaymentMethod[]
-  usageRecords UsageRecord[]
-  invitations UserInvitation[]
-  roles       RoleModel[]
-  
+  id                   String           @id @default(cuid())
+  name                 String
+  slug                 String           @unique
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  deletedAt            DateTime?
+  createdBy            String?
+  updatedBy            String?
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
+  customers            Customer[]
+  eventLogs            EventLog[]
+  feedbacks            Feedback[]
+  invoices             Invoice[]
+  paymentMethods       PaymentMethod[]
+  subscription         Subscription?
+  usageRecords         UsageRecord[]
+  users                UserCompany[]
+  invitations          UserInvitation[]
+  roles                RoleModel[]
+
   @@index([slug])
   @@index([deletedAt])
   @@index([stripeCustomerId])
@@ -59,20 +52,19 @@ model Company {
 }
 
 model UserCompany {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String
   companyId String
-  roleId    String?  // New: Reference to Role model
-  role      Role     @default(MEMBER) // Keep for backward compatibility during migration
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role       @default(MEMBER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   createdBy String?
   updatedBy String?
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  roleRef   RoleModel? @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  
+  roleId    String?
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  roleRef   RoleModel? @relation(fields: [roleId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, companyId])
   @@index([companyId])
   @@index([userId])
@@ -80,20 +72,19 @@ model UserCompany {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   email     String?
   phone     String?
   notes     String?
   companyId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
   createdBy String?
   updatedBy String?
-  
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([email])
   @@index([deletedAt])
@@ -109,10 +100,9 @@ model EventLog {
   createdAt DateTime @default(now())
   ipAddress String?
   userAgent String?
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([userId])
   @@index([createdAt])
@@ -122,15 +112,14 @@ model EventLog {
 
 model Feedback {
   id        String   @id @default(cuid())
-  message   String   @db.Text
+  message   String
   rating    Int?
   userId    String
   companyId String
   createdAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([userId])
   @@index([createdAt])
@@ -138,26 +127,25 @@ model Feedback {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  companyId            String   @unique
-  stripeSubscriptionId String   @unique
+  id                   String             @id @default(cuid())
+  companyId            String             @unique
+  stripeSubscriptionId String             @unique
   stripePriceId        String
   stripeProductId      String
   status               SubscriptionStatus
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean  @default(false)
+  cancelAtPeriodEnd    Boolean            @default(false)
   canceledAt           DateTime?
   trialStart           DateTime?
   trialEnd             DateTime?
   metadata             Json?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   createdBy            String?
   updatedBy            String?
-  
-  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  company              Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([stripeSubscriptionId])
   @@index([status])
@@ -165,26 +153,25 @@ model Subscription {
 }
 
 model Invoice {
-  id                String   @id @default(cuid())
-  companyId         String
-  stripeInvoiceId   String   @unique
-  invoiceNumber     String?
-  amountDue         Int      // Amount in cents
-  amountPaid        Int      // Amount in cents
-  currency          String   @default("usd")
-  status            InvoiceStatus
-  dueDate           DateTime?
-  paidAt            DateTime?
-  periodStart       DateTime
-  periodEnd         DateTime
-  invoicePdf        String?
-  hostedInvoiceUrl  String?
-  metadata          Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  id               String        @id @default(cuid())
+  companyId        String
+  stripeInvoiceId  String        @unique
+  invoiceNumber    String?
+  amountDue        Int
+  amountPaid       Int
+  currency         String        @default("usd")
+  status           InvoiceStatus
+  dueDate          DateTime?
+  paidAt           DateTime?
+  periodStart      DateTime
+  periodEnd        DateTime
+  invoicePdf       String?
+  hostedInvoiceUrl String?
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  company          Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([stripeInvoiceId])
   @@index([status])
@@ -196,32 +183,30 @@ model PaymentMethod {
   id                    String   @id @default(cuid())
   companyId             String
   stripePaymentMethodId String   @unique
-  type                  String   // card, bank_account, etc.
-  card                  Json?    // Card details (last4, brand, exp_month, exp_year)
+  type                  String
+  card                  Json?
   isDefault             Boolean  @default(false)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   createdBy             String?
   updatedBy             String?
-  
   company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+
   @@index([companyId])
   @@index([stripePaymentMethodId])
   @@index([isDefault])
 }
 
 model UsageRecord {
-  id              String   @id @default(cuid())
-  companyId       String
-  metric          String   // e.g., "api_calls", "storage_gb", "team_members"
-  quantity        Int
-  timestamp       DateTime @default(now())
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  companyId String
+  metric    String
+  quantity  Int
+  timestamp DateTime @default(now())
+  metadata  Json?
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId])
   @@index([metric])
   @@index([timestamp])
@@ -229,22 +214,21 @@ model UsageRecord {
 }
 
 model UserInvitation {
-  id          String   @id @default(cuid())
-  email       String
-  companyId   String
-  roleId      String?  // New: Reference to RoleModel
-  role        Role     @default(MEMBER) // Keep for backward compatibility
-  token       String   @unique
-  expiresAt   DateTime
-  acceptedAt  DateTime?
-  invitedBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  inviter     User     @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
-  roleRef     RoleModel? @relation("InvitationRole", fields: [roleId], references: [id], onDelete: SetNull)
-  
+  id         String     @id @default(cuid())
+  email      String
+  companyId  String
+  role       Role       @default(MEMBER)
+  token      String     @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  invitedBy  String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  roleId     String?
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  inviter    User       @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
+  roleRef    RoleModel? @relation("InvitationRole", fields: [roleId], references: [id])
+
   @@unique([email, companyId])
   @@index([companyId])
   @@index([token])
@@ -253,43 +237,40 @@ model UserInvitation {
   @@index([roleId])
 }
 
-// RBAC System Models
 model Permission {
-  id          String   @id @default(cuid())
-  key         String   @unique // e.g., 'org:view', 'billing:update'
-  name        String   // e.g., 'View Organization'
+  id          String      @id @default(cuid())
+  key         String      @unique
+  name        String
   description String?
-  category    String   // e.g., 'Organization', 'Billing', 'Team'
-  isSystem    Boolean  @default(false) // System permissions cannot be modified
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relationships
+  category    String
+  isSystem    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   roles       RoleModel[] @relation("RolePermissions")
-  
+
   @@index([category])
   @@index([isSystem])
   @@map("permissions")
 }
 
 model RoleModel {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  isSystem    Boolean  @default(false) // System roles cannot be modified
-  companyId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String?
-  updatedBy   String?
-  
-  // Relationships
-  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  permissions Permission[] @relation("RolePermissions")
+  id            String           @id @default(cuid())
+  name          String
+  description   String?
+  isSystem      Boolean          @default(false)
+  companyId     String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  createdBy     String?
+  updatedBy     String?
+  slug          String
   userCompanies UserCompany[]
-  invitations UserInvitation[] @relation("InvitationRole")
-  
+  invitations   UserInvitation[] @relation("InvitationRole")
+  company       Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  permissions   Permission[]     @relation("RolePermissions")
+
   @@unique([name, companyId])
+  @@unique([slug, companyId])
   @@index([companyId])
   @@index([isSystem])
   @@map("roles")

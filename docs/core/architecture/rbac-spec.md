@@ -1,191 +1,141 @@
 # 🔐 RBAC System Technical Specification
 
+_Last updated: 2025-09-27_
+
 ## 1. Overview
 
-This document outlines the technical implementation of the Role-Based Access Control (RBAC) system for SaaStastic. The system provides fine-grained access control while maintaining simplicity and performance.
+This document outlines the production RBAC implementation that now ships with SaaStastic. The system relies on Clerk authentication, Prisma models, and shared libraries under `src/shared/lib/` and `src/shared/hooks/` to deliver 29 granular permissions, system roles, and multi-layer enforcement.
 
 ## 2. Core Components
 
 ### 2.1 Database Schema
 
 ```prisma
-// prisma/schema.prisma
+// prisma/schema.prisma (excerpt)
 
-// Permission Definitions
 model Permission {
   id          String   @id @default(cuid())
-  key         String   @unique // e.g., 'project:create'
-  name        String   // e.g., 'Create Projects'
+  key         String   @unique
+  name        String
   description String?
-  category    String   // e.g., 'Projects', 'Billing', 'Team'
-  
-  // System permissions cannot be modified
+  category    String
   isSystem    Boolean  @default(false)
-  
-  // Relationships
-  roles       Role[]
-  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles       RoleModel[] @relation("RolePermissions")
+
+  @@index([category])
+  @@index([isSystem])
   @@map("permissions")
 }
 
-// Role Definitions
-model Role {
+model RoleModel {
   id          String   @id @default(cuid())
   name        String
   description String?
   isSystem    Boolean  @default(false)
-  
-  // Relationships
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   permissions Permission[] @relation("RolePermissions")
-  teamMembers TeamMember[]
-  
+  userCompanies UserCompany[]
+  invitations UserInvitation[] @relation("InvitationRole")
+
   @@unique([name, companyId])
+  @@index([companyId])
   @@map("roles")
 }
 
-// Team Member Assignment
-model TeamMember {
+model UserCompany {
   id        String   @id @default(cuid())
   userId    String
   companyId String
-  roleId    String
-  
-  // Relationships
-  user      User     @relation(fields: [userId], references: [id])
-  company   Company  @relation(fields: [companyId], references: [id])
-  role      Role     @relation(fields: [roleId], references: [id])
-  
-  // Audit
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  roleId    String?
+  role      Role     @default(MEMBER) // legacy enum
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  roleRef   RoleModel? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
   @@unique([userId, companyId])
-  @@map("team_members")
+  @@index([companyId])
+  @@index([roleId])
 }
 ```
 
 ### 2.2 Standard Roles & Permissions
 
-#### System Roles (Predefined)
+Permissions live in `src/shared/lib/permissions.ts` and are grouped for UI display. Highlights:
 
-1. **System Owner**
-   - Full access to all features
-   - Can manage organization settings
-   - Can manage billing
-   - Can manage team members and roles
+| Category | Permissions |
+| --- | --- |
+| Organization | `org:view`, `org:update`, `org:delete`, `org:settings` |
+| Billing | `billing:view`, `billing:update`, `billing:portal`, `billing:invoices` |
+| Team | `team:view`, `team:invite`, `team:remove`, `team:role:update`, `team:settings` |
+| Customers | `customer:create`, `customer:view`, `customer:update`, `customer:delete`, `customer:export` |
+| API | `api_key:create`, `api_key:view`, `api_key:delete` |
+| System (future admin surface) | `system:logs`, `system:health`, `system:impersonate` |
+| Roles | `role:create`, `role:view`, `role:update`, `role:delete`, `role:assign` |
 
-2. **Billing Manager**
-   - View and update billing information
-   - Download invoices
-   - Update payment methods
+`DEFAULT_ROLE_PERMISSIONS` maps these 29 permissions into system roles seeded per tenant:
 
-3. **Team Admin**
-   - Invite/remove team members
-   - Assign roles (except System Owner)
-   - Manage team settings
+- **Owner**: Receives every permission value (`...Object.values(PERMISSIONS)`).
+- **Admin**: Full organization, billing, team, customer, API, and role management minus destructive operations (`org:delete`, admin-only system perms).
+- **Member**: Read/write customer operations, read-only organization/billing/team, may create customers.
+- **Viewer**: Read-only access across organization, billing, team, customers, and roles.
 
-4. **Developer**
-   - Manage API keys
-   - View system logs
-   - Access developer tools
-
-5. **Member**
-   - Basic application access
-   - View company resources
-   - Limited settings access
-
-#### Standard Permissions
-
-```typescript
-// lib/permissions.ts
-export const PERMISSIONS = {
-  // Organization
-  ORG_VIEW: 'org:view',
-  ORG_UPDATE: 'org:update',
-  ORG_DELETE: 'org:delete',
-  
-  // Billing
-  BILLING_VIEW: 'billing:view',
-  BILLING_UPDATE: 'billing:update',
-  
-  // Team
-  TEAM_INVITE: 'team:invite',
-  TEAM_REMOVE: 'team:remove',
-  TEAM_ROLE_UPDATE: 'team:role:update',
-  
-  // Projects
-  PROJECT_CREATE: 'project:create',
-  PROJECT_VIEW: 'project:view',
-  PROJECT_UPDATE: 'project:update',
-  PROJECT_DELETE: 'project:delete',
-  
-  // API Keys
-  API_KEY_CREATE: 'api_key:create',
-  API_KEY_VIEW: 'api_key:view',
-  API_KEY_DELETE: 'api_key:delete',
-} as const;
-
-export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
-```
+The seed script (`scripts/seed-rbac.ts`) assigns these roles to every existing tenant and migrates legacy enum roles into the new model.
 
 ## 3. API Implementation
 
 ### 3.1 Permission Middleware
 
+API enforcement lives in `src/shared/lib/rbac-middleware.ts` and wraps handlers with Clerk-authenticated context:
+
 ```typescript
-// lib/middleware/withPermissions.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PERMISSIONS } from '@/lib/permissions';
+import { PERMISSIONS, type Permission } from '@/shared/lib/permissions';
+import { withPermissions } from '@/shared/lib/rbac-middleware';
 
-type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+export const POST = withPermissions(async (req, context) => {
+  const payload = await req.json();
+  const result = await db.customer.create({
+    data: {
+      ...payload,
+      companyId: context.companyId,
+      createdBy: context.userId,
+    },
+  });
 
-export function withPermissions(
-  handler: (req: NextRequest, context: any) => Promise<NextResponse>,
-  requiredPermissions: Permission[] = []
-) {
-  return async (req: NextRequest, context: any) => {
-    const { user } = context;
-    
-    // Skip if no permissions required
-    if (!requiredPermissions.length) {
-      return handler(req, context);
-    }
-    
-    // Check if user has all required permissions
-    const hasAllPermissions = requiredPermissions.every(permission => 
-      user.permissions.includes(permission)
-    );
-    
-    if (!hasAllPermissions) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-    
-    return handler(req, context);
-  };
-}
+  return NextResponse.json({ success: true, data: result });
+}, [PERMISSIONS.CUSTOMER_CREATE]);
 ```
+
+`withPermissions` performs the following:
+
+- Retrieves the authenticated user via `auth()` from `@clerk/nextjs/server`.
+- Resolves `companyId` from the `x-company-id` header or query string.
+- Fetches the user’s `UserCompany` record, linking the `roleRef` and eager-loading its permissions.
+- Falls back to enum roles (`UserCompany.role`) during migration to avoid lockouts.
+- Verifies every `requiredPermission` before invoking the handler.
+- Injects an `AuthenticatedContext` containing `user`, `company`, `permissions`, and IDs.
 
 ### 3.2 Usage in API Routes
 
-```typescript
-// app/api/projects/route.ts
-import { withApiMiddleware } from '@/lib/middleware/withApiMiddleware';
-import { withPermissions } from '@/lib/middleware/withPermissions';
-import { PERMISSIONS } from '@/lib/permissions';
+Combine `withPermissions` with `withApiMiddleware` for validation, rate limiting, and CSRF enforcement:
 
+```typescript
 export const POST = withApiMiddleware(
-  withPermissions(
-    async (req: NextRequest, context) => {
-      // Your route handler
-      return NextResponse.json({ success: true });
-    },
-    [PERMISSIONS.PROJECT_CREATE] // Required permissions
-  )
+  withPermissions(handler, [PERMISSIONS.CUSTOMER_CREATE]),
+  {
+    requireAuth: true,
+    requireCompany: true,
+    validateSchema: customerSchema,
+  }
 );
 ```
 
@@ -193,28 +143,41 @@ export const POST = withApiMiddleware(
 
 ### 4.1 Permission Hooks
 
+`src/shared/hooks/use-permissions.ts` fetches permissions via React Query and the `/api/users/permissions` endpoint (protected by `withPermissions` sans requirements):
+
 ```typescript
-// hooks/usePermissions.ts
-import { useSession } from 'next-auth/react';
-import { PERMISSIONS } from '@/lib/permissions';
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import { useCompany } from '@/core/auth/company-provider';
+import { PERMISSIONS, type Permission } from '@/shared/lib/permissions';
+import { useQuery } from '@tanstack/react-query';
 
 export function usePermissions() {
-  const { data: session } = useSession();
-  
-  const hasPermission = (permission: string): boolean => {
-    if (!session?.user?.permissions) return false;
-    return session.user.permissions.includes(permission);
-  };
-  
-  const hasAnyPermission = (permissions: string[]): boolean => {
-    if (!session?.user?.permissions) return false;
-    return permissions.some(p => session.user?.permissions?.includes(p));
-  };
-  
+  const { user, isLoaded } = useUser();
+  const { currentCompany } = useCompany();
+
+  const {
+    data: permissions = [],
+    isLoading,
+  } = useQuery({
+    queryKey: ['permissions', user?.id, currentCompany?.id],
+    queryFn: () => fetchPermissions(currentCompany!.id),
+    enabled: isLoaded && !!user && !!currentCompany?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasPermission = (permission: Permission) => permissions.includes(permission);
+  const hasAnyPermission = (required: Permission[]) => required.some(hasPermission);
+  const hasAllPermissions = (required: Permission[]) => required.every(hasPermission);
+
   return {
+    permissions,
+    loading: isLoading || !isLoaded,
     hasPermission,
     hasAnyPermission,
-    PERMISSIONS // Export all permissions for easy access
+    hasAllPermissions,
+    PERMISSIONS,
   };
 }
 ```
@@ -222,124 +185,62 @@ export function usePermissions() {
 ### 4.2 Protected Components
 
 ```tsx
-// components/shared/PermissionGuard.tsx
-'use client';
+import { PermissionGuard } from '@/shared/components/permission-guard';
+import { PERMISSIONS } from '@/shared/lib/permissions';
 
-import { ReactNode } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
-
-type PermissionGuardProps = {
-  children: ReactNode;
-  requiredPermission?: string;
-  requiredPermissions?: string[];
-  fallback?: ReactNode;
-};
-
-export function PermissionGuard({
-  children,
-  requiredPermission,
-  requiredPermissions = [],
-  fallback = null,
-}: PermissionGuardProps) {
-  const { hasPermission, hasAnyPermission } = usePermissions();
-  
-  if (requiredPermission && !hasPermission(requiredPermission)) {
-    return <>{fallback}</>;
-  }
-  
-  if (requiredPermissions.length > 0 && !hasAnyPermission(requiredPermissions)) {
-    return <>{fallback}</>;
-  }
-  
-  return <>{children}</>;
-}
+<PermissionGuard permission={PERMISSIONS.TEAM_REMOVE} fallback={null}>
+  <ConfirmRemoveButton memberId={member.id} />
+</PermissionGuard>
 ```
+
+Specialized guards such as `TeamManagementGuard` and `BillingGuard` wrap common permission bundles.
 
 ## 5. Migration Plan
 
 ### 5.1 Database Migrations
 
-```prisma
-// prisma/migrations/YYYYMMDD_add_rbac/migration.sql
--- Create permissions table
-CREATE TABLE permissions (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  key TEXT NOT NULL UNIQUE,
-  name TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL,
-  "isSystem" BOOLEAN NOT NULL DEFAULT false,
-  "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
+Migration files under `prisma/migrations/20240924164507_enable_rbac/` (timestamp may vary) introduce the new tables. Key points:
 
--- Create roles table
-CREATE TABLE roles (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  description TEXT,
-  "isSystem" BOOLEAN NOT NULL DEFAULT false,
-  "companyId" TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  UNIQUE(name, "companyId")
-);
-
--- Create role_permissions join table
-CREATE TABLE "_RolePermissions" (
-  "A" TEXT NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
-  "B" TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE
-);
-
--- Update team_members table
-ALTER TABLE team_members 
-ADD COLUMN "roleId" TEXT REFERENCES roles(id) ON DELETE SET NULL;
-
--- Create indexes
-CREATE INDEX "team_members_role_id_idx" ON team_members("roleId");
-CREATE INDEX "_RolePermissions_AB_unique" ON "_RolePermissions"("A", "B");
-CREATE INDEX "_RolePermissions_B_index" ON "_RolePermissions"("B");
-```
+- Creates `permissions`, `roles`, and the `_RolePermissions` join table.
+- Adds `roleId` to `user_companies` and `user_invitations` with `SetNull` semantics.
+- Seeds default roles and permissions via `scripts/seed-rbac.ts` immediately after migration.
 
 ### 5.2 Data Migration
 
-Create a script to:
-1. Insert system permissions
-2. Create default roles
-3. Assign existing users to appropriate roles
-4. Migrate any existing permission logic
+`scripts/seed-rbac.ts` performs the following in order:
+
+1. Upserts every permission defined in `PERMISSION_DEFINITIONS`.
+2. Creates/updates system roles (Owner/Admin/Member/Viewer) per tenant.
+3. Reconciles existing `UserCompany` rows by mapping legacy enum roles to the new role IDs.
+4. Prints counts for auditing and can be safely rerun.
 
 ## 6. Testing Strategy
 
 ### 6.1 Unit Tests
-- Test permission checks
-- Test role assignments
-- Test middleware behavior
+- Validate `withPermissions` error branches using mocked contexts.
+- Test `getUserPermissions()` and `hasPermission()` helpers against seeded fixtures.
 
 ### 6.2 Integration Tests
-- Test API endpoints with different permission sets
-- Test role management flows
-- Test team member invitations
+- Exercise RBAC-protected API routes with users assigned to each system role.
+- Verify `POST /api/users/team/[memberId]/role` enforces `team:role:update`.
 
 ### 6.3 E2E Tests
-- Test complete user flows with different roles
-- Test permission boundaries
-- Test error states
+- Cover invite → accept → role change flows in Playwright.
+- Confirm UI hides destructive actions when permissions are missing (e.g., remove member button).
 
 ## 7. Security Considerations
 
 1. **Permission Escalation**
-   - Validate role assignments
-   - Prevent users from assigning permissions they don't have
+   - Only users with `role:assign` may change roles or issue invitations.
+   - Invitation flows enforce permissions server-side before creating tokens.
 
 2. **Audit Logging**
-   - Log all permission changes
-   - Track role assignments
-   - Monitor permission usage
+   - `EventLog` captures role changes and removals with `companyId`, `userId`, and metadata.
+   - Future admin portal work will surface these logs.
 
 3. **Rate Limiting**
-   - Protect role/permission endpoints
-   - Prevent brute force attacks
+   - RBAC endpoints inherit rate limiting via `withApiMiddleware`.
+   - Recommend Upstash or similar for distributed deployments.
 
 ## 8. Future Enhancements
 
@@ -357,30 +258,30 @@ Create a script to:
 
 ## 9. Rollout Plan
 
-1. **Phase 1: Core Implementation**
-   - Database schema
-   - Basic RBAC middleware
-   - Default roles and permissions
+1. **Phase 1: Core Implementation** (Complete)
+   - Database schema + migrations
+   - `withPermissions` middleware + shared helpers
+   - Default roles and permissions seeded automatically
 
-2. **Phase 2: Management UI**
-   - Role management
-   - Team member management
-   - Permission auditing
+2. **Phase 2: Management UI** (Complete)
+   - Team members list with role badges and actions
+   - Invitation modal with role pickers
+   - Activity dashboard summarizing RBAC events
 
-3. **Phase 3: Advanced Features**
-   - Custom roles
-   - Resource-level permissions
-   - Advanced reporting
+3. **Phase 3: Advanced Features** (Planned)
+   - Custom role builder UI
+   - System impersonation & audit tooling
+   - Admin support portal surface
 
 ## 10. Rollback Plan
 
 1. **Database Rollback**
-   - Migration rollback scripts
-   - Backup before deployment
+   - Use `prisma migrate reset` in development; restore backups in production prior to downgrade.
+   - Re-running the seed script after restore ensures role-permission integrity.
 
 2. **Code Rollback**
-   - Feature flags
-   - Versioned API endpoints
+   - Keep RBAC gate usage behind feature flags when introducing new permissions.
+   - Maintain backward compatibility by preserving legacy enum roles until all tenants migrate.
 
 ---
 *Last Updated: 2025-09-22*

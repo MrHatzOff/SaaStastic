@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { currentUser } from '@clerk/nextjs/server'
 import { db } from '@/core/db/client'
+import { provisionSystemRolesForCompany } from '@/core/rbac/provisioner'
+import { SYSTEM_ROLE_SLUGS } from '@/core/rbac/default-roles'
 import { withApiMiddleware, type ApiContext } from '@/shared/lib/api-middleware'
 
 /**
@@ -98,16 +101,34 @@ export const POST = withApiMiddleware(
         }, { status: 401 })
       }
 
-      const user = await db.user.findUnique({
+      // Check if user exists, if not create them (auto-sync from Clerk)
+      let user = await db.user.findUnique({
         where: { id: context.userId },
       });
 
       if (!user) {
-        // This should not happen if auth middleware is working correctly
-        return NextResponse.json({
-          success: false,
-          error: 'User not found. Please sign in again.'
-        }, { status: 400 })
+        // User authenticated with Clerk but not in our DB yet - create them
+        try {
+          const clerkUser = await currentUser()
+          const email = clerkUser?.emailAddresses?.[0]?.emailAddress || 'unknown@example.com'
+          const name = clerkUser?.firstName && clerkUser?.lastName 
+            ? `${clerkUser.firstName} ${clerkUser.lastName}` 
+            : clerkUser?.firstName || null
+
+          user = await db.user.create({
+            data: {
+              id: context.userId,
+              email,
+              name,
+            },
+          })
+        } catch (syncError) {
+          console.error('Failed to sync user from Clerk:', syncError)
+          return NextResponse.json({
+            success: false,
+            error: 'Failed to create user profile. Please try again.'
+          }, { status: 500 })
+        }
       }
 
       // Use transaction to ensure atomicity
@@ -121,12 +142,20 @@ export const POST = withApiMiddleware(
           },
         });
 
+        const { roles } = await provisionSystemRolesForCompany(company.id, tx)
+        const ownerRoleId = roles.find((role) => role.slug === SYSTEM_ROLE_SLUGS.OWNER)?.roleId
+
+        if (!ownerRoleId) {
+          throw new Error('Failed to provision system Owner role for company creation')
+        }
+
         // Create UserCompany relationship with OWNER role
         const userCompany = await tx.userCompany.create({
           data: {
             userId: context.userId!,
             companyId: company.id,
             role: 'OWNER',
+            roleId: ownerRoleId,
             createdBy: context.userId!,
           },
         });
@@ -140,6 +169,7 @@ export const POST = withApiMiddleware(
             metadata: {
               companyName: company.name,
               companySlug: company.slug,
+              ownerRoleId,
             },
           },
         });
@@ -174,5 +204,8 @@ export const POST = withApiMiddleware(
         error: 'Internal server error'
       }, { status: 500 })
     }
+  },
+  {
+    requireAuth: true,
   }
 )

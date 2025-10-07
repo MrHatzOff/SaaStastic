@@ -6,11 +6,9 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { 
-  PERMISSION_DEFINITIONS, 
-  DEFAULT_ROLE_PERMISSIONS,
-  PERMISSIONS 
-} from '../src/shared/lib/permissions';
+import { PERMISSION_DEFINITIONS } from '../src/shared/lib/permissions';
+import { provisionSystemRolesForCompany } from '../src/core/rbac/provisioner';
+import { SYSTEM_ROLE_TEMPLATE_LIST } from '../src/core/rbac/default-roles';
 
 const prisma = new PrismaClient();
 
@@ -43,86 +41,6 @@ async function seedPermissions() {
   return permissions;
 }
 
-async function seedRolesForCompany(companyId: string) {
-  console.log(`🏢 Seeding roles for company: ${companyId}`);
-
-  const roleDefinitions = [
-    {
-      name: 'Owner',
-      description: 'Full access to all features and settings',
-      isSystem: true,
-      permissions: DEFAULT_ROLE_PERMISSIONS.OWNER,
-    },
-    {
-      name: 'Admin', 
-      description: 'Administrative access with most permissions',
-      isSystem: true,
-      permissions: DEFAULT_ROLE_PERMISSIONS.ADMIN,
-    },
-    {
-      name: 'Member',
-      description: 'Standard member with basic access',
-      isSystem: true,
-      permissions: DEFAULT_ROLE_PERMISSIONS.MEMBER,
-    },
-    {
-      name: 'Viewer',
-      description: 'Read-only access to most features',
-      isSystem: true,
-      permissions: DEFAULT_ROLE_PERMISSIONS.VIEWER,
-    },
-  ];
-
-  const createdRoles = [];
-
-  for (const roleDef of roleDefinitions) {
-    // Create or update the role
-    const role = await prisma.roleModel.upsert({
-      where: {
-        name_companyId: {
-          name: roleDef.name,
-          companyId,
-        }
-      },
-      update: {
-        description: roleDef.description,
-        isSystem: roleDef.isSystem,
-      },
-      create: {
-        name: roleDef.name,
-        description: roleDef.description,
-        isSystem: roleDef.isSystem,
-        companyId,
-      },
-    });
-
-    // Get permission IDs for this role
-    const permissionRecords = await prisma.permission.findMany({
-      where: {
-        key: {
-          in: roleDef.permissions,
-        }
-      },
-      select: { id: true }
-    });
-
-    // Connect permissions to role (clear existing first)
-    await prisma.roleModel.update({
-      where: { id: role.id },
-      data: {
-        permissions: {
-          set: permissionRecords.map(p => ({ id: p.id }))
-        }
-      }
-    });
-
-    createdRoles.push(role);
-    console.log(`✅ Created/updated role: ${roleDef.name} with ${roleDef.permissions.length} permissions`);
-  }
-
-  return createdRoles;
-}
-
 async function migrateExistingUsers() {
   console.log('👥 Migrating existing users to RBAC system...');
 
@@ -136,9 +54,9 @@ async function migrateExistingUsers() {
   for (const company of companies) {
     console.log(`Processing company: ${company.name}`);
 
-    // Seed roles for this company
-    const roles = await seedRolesForCompany(company.id);
-    const roleMap = new Map(roles.map(r => [r.name, r.id]));
+    // Provision system roles for this company
+    const { roles } = await provisionSystemRolesForCompany(company.id, prisma);
+    const roleMap = new Map(roles.map(role => [role.slug, role.roleId]));
 
     // Get users in this company who don't have roleId set
     const userCompanies = await prisma.userCompany.findMany({
@@ -157,19 +75,19 @@ async function migrateExistingUsers() {
       
       switch (userCompany.role) {
         case 'OWNER':
-          newRoleId = roleMap.get('Owner') || null;
+          newRoleId = roleMap.get('system-owner') || null;
           break;
         case 'ADMIN':
-          newRoleId = roleMap.get('Admin') || null;
+          newRoleId = roleMap.get('system-admin') || null;
           break;
         case 'MEMBER':
-          newRoleId = roleMap.get('Member') || null;
+          newRoleId = roleMap.get('system-member') || null;
           break;
         case 'VIEWER':
-          newRoleId = roleMap.get('Viewer') || null;
+          newRoleId = roleMap.get('system-viewer') || null;
           break;
         default:
-          newRoleId = roleMap.get('Member') || null; // Default to Member
+          newRoleId = roleMap.get('system-member') || null; // Default to Member
       }
 
       if (newRoleId) {
@@ -194,7 +112,23 @@ async function main() {
     // 1. Seed all permissions
     await seedPermissions();
 
-    // 2. Migrate existing users
+    // 2. Ensure system roles are provisioned for every company
+    const companies = await prisma.company.findMany({ select: { id: true, name: true } });
+
+    for (const company of companies) {
+      console.log(`🏢 Provisioning roles for company: ${company.name}`);
+      const { roles } = await provisionSystemRolesForCompany(company.id, prisma);
+
+      for (const template of SYSTEM_ROLE_TEMPLATE_LIST) {
+        const roleMeta = roles.find((role) => role.slug === template.slug);
+        if (!roleMeta?.roleId) {
+          throw new Error(`Failed to provision ${template.name} role for company ${company.id}`);
+        }
+        console.log(`   • ${template.name} → ${roleMeta.roleId}`);
+      }
+    }
+
+    // 3. Migrate existing users
     await migrateExistingUsers();
 
     console.log('🎉 RBAC seed completed successfully!');

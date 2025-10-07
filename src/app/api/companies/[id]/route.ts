@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { withApiMiddleware, successResponse, throwApiError, ApiContext } from '@/shared/lib/api-middleware'
 import { db, withSystemContext } from '@/core/db/client'
+
+// Next.js 15 route segment config
+export const dynamic = 'force-dynamic'
 
 // Validation schemas
 const updateCompanySchema = z.object({

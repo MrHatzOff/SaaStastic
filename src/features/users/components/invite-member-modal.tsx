@@ -89,7 +89,7 @@ export function InviteMemberModal({
       });
 
       if (!validationResult.success) {
-        const errorMessage = validationResult.error.errors[0]?.message || 'Invalid input';
+        const errorMessage = validationResult.error.issues[0]?.message || 'Invalid input';
         toast.error(errorMessage);
         return;
       }

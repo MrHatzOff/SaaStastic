@@ -2,7 +2,7 @@
 
 ## 🚀 NEW SESSION ONBOARDING
 
-### **MANDATORY READING** (Read in order - 15 minutes total):
+### **MANDATORY READING** 
 1. **`/docs/core/PRD_V2.md`** - Current project status and architecture overview
 2. **`/docs/core/ARCHITECTURE_V2.md`** - Technical patterns and multi-tenant security
 3. **`/docs/core/WINDSURF_RULES.md`** - Copy-paste ready development patterns

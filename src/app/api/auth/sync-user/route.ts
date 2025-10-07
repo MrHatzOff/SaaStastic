@@ -8,7 +8,7 @@ import { db } from '@/core/db/client';
  * Syncs Clerk user data with our database.
  * Called after user signs up or when we need to ensure user exists.
  */
-export async function POST(_request: NextRequest) {
+export const POST = async () => {
   try {
     const { userId } = await auth();
     const user = await currentUser();

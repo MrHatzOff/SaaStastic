@@ -22,6 +22,8 @@ This guide covers everything you need to deploy SaaStastic to production, includ
 
 ### 1. Stripe Configuration
 
+**Important**: SaaStastic uses Stripe SDK v19.0.0 with API version `2025-09-30.clover`
+
 #### Create Stripe Account
 1. Sign up at [stripe.com](https://stripe.com)
 2. Complete business verification
@@ -40,6 +42,8 @@ stripe login
 # Create products (update prices in the script as needed)
 node scripts/setup-stripe-products.js
 ```
+
+**Note**: Ensure your Stripe account is configured for API version `2025-09-30.clover` or later
 
 Or create manually in Stripe Dashboard:
 
@@ -67,6 +71,13 @@ Or create manually in Stripe Dashboard:
    - `invoice.*`
    - `payment_method.*`
 4. Copy webhook signing secret → `STRIPE_WEBHOOK_SECRET`
+
+**Important for Stripe v19**: Ensure you set `companyId` in metadata during checkout session creation:
+```typescript
+metadata: {
+  companyId: companyId, // Required for invoice tracking
+}
+```
 
 ### 2. Database Setup
 

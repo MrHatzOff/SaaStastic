@@ -82,11 +82,11 @@ export const DELETE = withPermissions(
       // Log the bulk removal
       await db.eventLog.create({
         data: {
-          type: 'TEAM_BULK_REMOVE',
-          description: `Bulk removed ${membersToRemove.length} team members`,
+          action: 'TEAM_BULK_REMOVE',
           companyId: context.companyId,
           userId: context.userId,
           metadata: {
+            description: `Bulk removed ${membersToRemove.length} team members`,
             removedMembers: membersToRemove.map(m => ({
               id: m.id,
               email: m.user.email,
@@ -108,7 +108,7 @@ export const DELETE = withPermissions(
       
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Invalid request data', details: error.errors },
+          { error: 'Invalid request data', details: error.issues },
           { status: 400 }
         );
       }

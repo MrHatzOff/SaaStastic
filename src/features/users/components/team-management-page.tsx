@@ -95,7 +95,7 @@ export function TeamManagementPage({
         <TabsContent value="members" className="space-y-4">
           <TeamMembersList
             key={refreshKey}
-            companyId={companyId}
+            companyId={companyId!}
             currentUserId={currentUserId}
             currentUserRole={currentUserRole}
             onInviteClick={handleInviteClick}
@@ -279,10 +279,10 @@ export function TeamManagementPage({
                             Automatically log out inactive users after specified time
                           </p>
                         </div>
-                        <select className="rounded border px-3 py-1">
+                        <select className="rounded border px-3 py-1" defaultValue="24h">
                           <option value="1h">1 hour</option>
                           <option value="8h">8 hours</option>
-                          <option value="24h" selected>24 hours</option>
+                          <option value="24h">24 hours</option>
                           <option value="never">Never</option>
                         </select>
                       </div>

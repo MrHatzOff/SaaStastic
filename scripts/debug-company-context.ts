@@ -97,7 +97,7 @@ async function debugCompanyContext() {
       orderBy: { createdAt: 'desc' }
     });
 
-    roles.forEach((role: any, index: number) => {
+    roles.forEach((role, index: number) => {
       console.log(`  ${index + 1}. ${role.name} (${role.id})`);
       console.log(`     System: ${role.isSystem}`);
       console.log(`     Created: ${role.createdAt}`);
@@ -151,13 +151,12 @@ async function debugCompanyContext() {
 async function main() {
   try {
     await debugCompanyContext();
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ Error:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
-
 if (require.main === module) {
   main();
 }

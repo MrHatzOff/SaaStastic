@@ -4,22 +4,39 @@
 
 **SaaStastic** is a **production-ready, enterprise-grade multi-tenant B2B SaaS foundation** with comprehensive RBAC system. You are joining a project that has evolved from development to **complete production readiness**.
 
-### **Current Status: PRODUCTION-READY ENTERPRISE FOUNDATION**
+### **Current Status: PRODUCTION-READY ENTERPRISE FOUNDATION** (October 5, 2025)
 - ✅ **Multi-tenant Architecture** - Complete tenant isolation with `companyId` scoping
 - ✅ **Enterprise RBAC System** - 29 granular permissions across 7 categories
 - ✅ **Clean Architecture** - Organized codebase (`src/core/`, `src/features/`, `src/shared/`)
 - ✅ **TypeScript Excellence** - 100% source code compliance
 - ✅ **Complete Integration** - Clerk auth, Stripe billing, PostgreSQL + Prisma
+- ✅ **Authentication Fixed** - Clerk 6.x async handling, auto-sync, performance optimized
+
+## 🔥 **RECENT CRITICAL UPDATES** (October 5, 2025)
+
+### **Authentication & RBAC Fixes - ALL WORKING**
+- ✅ **Clerk 6.x Auth Fixed**: Added `await auth()` in API middleware (was causing 401 errors)
+- ✅ **Performance Fixed**: Removed `currentUser()` causing 23-second timeouts
+- ✅ **User Auto-Sync**: Users automatically created from Clerk on first API call
+- ✅ **Company Context**: RBAC middleware auto-fetches company (no headers required)
+- ✅ **Invitations Working**: Fixed "Company context required" error
+
+**Impact**: All manual workflows now fully functional. E2E tests need timeout adjustments only.
+
+**See**: [AUTHENTICATION_FIX_SUMMARY.md](./AUTHENTICATION_FIX_SUMMARY.md) for troubleshooting patterns.
+
+---
 
 ## 📚 **ESSENTIAL READING (READ FIRST)**
 
 ### **1. Core Documentation (MANDATORY)**
 ```bash
 # Read these files in order before coding:
-1. docs/core/product-vision-and-roadmap.md    # Strategic direction
-2. docs/core/product-status.md                # Current implementation status
-3. docs/core/architecture-blueprint.md        # Technical architecture
-4. docs/dev/proposedUpdates/summary.md        # Project progress summary
+1. AUTHENTICATION_FIX_SUMMARY.md              # Recent fixes & patterns (Oct 2025)
+2. docs/core/CURRENTNOTES.md                  # Latest status & next steps
+3. docs/core/product-vision-and-roadmap.md    # Strategic direction
+4. docs/core/product-status.md                # Current implementation status
+5. docs/core/architecture-blueprint.md        # Technical architecture
 ```
 
 ### **2. RBAC System (CRITICAL)**
@@ -94,14 +111,19 @@ src/
 
 ## 🛠️ **DEVELOPMENT PATTERNS**
 
-### **API Route Pattern (RBAC-Protected)**
+### **API Route Pattern (RBAC-Protected)** - Updated Oct 2025
 ```typescript
 // src/app/api/[module]/route.ts
 import { withPermissions, PERMISSIONS } from '@/shared/lib';
 
 export const POST = withPermissions(
   async (req: NextRequest, context: AuthenticatedContext) => {
+    // context.userId - from await auth() (Clerk 6.x requires await!)
+    // context.companyId - auto-fetched from user's company
+    // context.permissions - user's permission array
+    
     const data = schema.parse(await req.json());
+    
     // Auto-scoped by context.companyId + permission checked
     const result = await db.model.create({
       data: { ...data, companyId: context.companyId }
@@ -110,6 +132,26 @@ export const POST = withPermissions(
   },
   [PERMISSIONS.CUSTOMER_CREATE] // Required permissions
 );
+```
+
+### **CRITICAL: Clerk 6.x Authentication Pattern**
+```typescript
+// ❌ WRONG - Missing await causes 401 errors
+const authData = auth()
+
+// ✅ CORRECT - Clerk 6.x requires await
+const authData = await auth()
+const { userId } = authData
+
+// Auto-fetch company if not in headers
+if (!companyId) {
+  const userCompany = await db.userCompany.findFirst({
+    where: { userId },
+    select: { companyId: true },
+    orderBy: { createdAt: 'desc' }
+  });
+  companyId = userCompany?.companyId || null;
+}
 ```
 
 ### **Component Pattern (Permission-Aware)**

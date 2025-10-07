@@ -7,7 +7,7 @@ import { db } from '@/core/db/client';
  * 
  * Check if user has completed onboarding (has a company)
  */
-export async function GET(request: NextRequest) {
+export const GET = async (_request: NextRequest) => {
   try {
     const { userId } = await auth();
     

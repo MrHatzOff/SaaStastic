@@ -11,11 +11,11 @@ import { db } from '@/core/db/client';
 import { z } from 'zod';
 
 const activitiesQuerySchema = z.object({
-  userId: z.string().optional(),
-  type: z.string().optional(),
-  dateRange: z.enum(['1d', '7d', '30d', '90d']).default('7d'),
-  limit: z.coerce.number().min(1).max(100).default(50),
-  offset: z.coerce.number().min(0).default(0),
+  userId: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  dateRange: z.enum(['1d', '7d', '30d', '90d']).nullable().default('7d'),
+  limit: z.coerce.number().min(1).max(100).nullable().default(50),
+  offset: z.coerce.number().min(0).nullable().default(0),
 });
 
 export const GET = withPermissions(
@@ -53,7 +53,7 @@ export const GET = withPermissions(
         companyId: string;
         createdAt: { gte: Date };
         userId?: string;
-        type?: string;
+        action?: string;
       } = {
         companyId: context.companyId,
         createdAt: {
@@ -61,12 +61,12 @@ export const GET = withPermissions(
         },
       };
 
-      if (query.userId) {
+      if (query.userId && query.userId !== null) {
         whereClause.userId = query.userId;
       }
 
-      if (query.type) {
-        whereClause.type = query.type;
+      if (query.type && query.type !== null) {
+        whereClause.action = query.type;
       }
 
       // Fetch activities
@@ -83,8 +83,8 @@ export const GET = withPermissions(
         orderBy: {
           createdAt: 'desc',
         },
-        take: query.limit,
-        skip: query.offset,
+        take: query.limit || 50,
+        skip: query.offset || 0,
       });
 
       // Get total count for pagination
@@ -95,8 +95,8 @@ export const GET = withPermissions(
       // Transform the data
       const transformedActivities = activities.map(activity => ({
         id: activity.id,
-        type: activity.type,
-        description: activity.description,
+        type: activity.action,
+        description: activity.action,
         userId: activity.userId,
         userName: activity.user?.name,
         userEmail: activity.user?.email || 'Unknown',
@@ -111,9 +111,9 @@ export const GET = withPermissions(
         activities: transformedActivities,
         pagination: {
           total: totalCount,
-          limit: query.limit,
-          offset: query.offset,
-          hasMore: query.offset + query.limit < totalCount,
+          limit: query.limit || 50,
+          offset: query.offset || 0,
+          hasMore: (query.offset || 0) + (query.limit || 50) < totalCount,
         }
       });
 
@@ -122,7 +122,7 @@ export const GET = withPermissions(
       
       if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Invalid query parameters', details: error.errors },
+          { error: 'Invalid query parameters', details: error.issues },
           { status: 400 }
         );
       }

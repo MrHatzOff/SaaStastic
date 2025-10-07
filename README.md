@@ -1,20 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 SaaStastic - Enterprise B2B SaaS Foundation
 
-## Getting Started
+**Production-Ready Multi-Tenant B2B SaaS Boilerplate**
 
-First, run the development server:
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Status**: ✅ **Production Ready** (October 5, 2025)
+
+A complete, enterprise-grade B2B SaaS foundation with multi-tenancy, RBAC, Stripe billing, and team management. Built with Next.js 15, React 19, TypeScript, and PostgreSQL.
+
+## ✨ What's Included
+
+- 🔐 **Multi-Tenant Architecture** - Complete tenant isolation with row-level security
+- 🎭 **29-Permission RBAC System** - Owner, Admin, Member, Viewer roles with granular permissions
+- 💳 **Stripe Integration** - Subscription billing, webhooks, customer portal
+- 👥 **Team Management** - User invitations, role assignment, activity tracking
+- 🏢 **Company Management** - Multi-company support with automatic RBAC provisioning
+- 📊 **Dashboard & Analytics** - User activity, audit logs, system health
+- 🎨 **Modern UI** - TailwindCSS 4, shadcn/ui components, responsive design
+- 🔒 **Clerk Authentication** - Social login, magic links, multi-factor auth
+- ✅ **TypeScript Strict Mode** - 100% type-safe codebase
+- 🧪 **E2E Testing** - Playwright test suite for critical flows
+
+## 🚀 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-org/saastastic.git
+cd saastastic
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your keys
+
+# Run database migrations
+npx prisma migrate dev
+
+# Seed RBAC permissions
+npx tsx scripts/seed-rbac.ts
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Visit `http://localhost:3000` to see your application!
+
+## 🔑 Recent Updates (October 5, 2025)
+
+### ✅ Critical Fixes Applied
+- **Clerk 6.x Authentication**: Fixed async auth() handling
+- **User Auto-Sync**: Automatic user creation from Clerk
+- **RBAC Middleware**: Auto-fetch company context
+- **Performance**: Removed timeout-causing code (23s → <1s)
+
+See [AUTHENTICATION_FIX_SUMMARY.md](./AUTHENTICATION_FIX_SUMMARY.md) for details.
 
 ## 📖 Usage Guide
 
@@ -39,31 +82,51 @@ Visit `http://localhost:3000` to see your application!
 ### Multi-Tenant Development
 
 ```typescript
-// Use company context in components
-import { useCurrentCompany } from '@/core/auth/company-provider'
+// Use RBAC-protected API routes
+import { withPermissions } from '@/shared/lib/rbac-middleware';
+import { PERMISSIONS } from '@/shared/lib/permissions';
+
+export const POST = withPermissions(
+  async (req: NextRequest, context) => {
+    // context.userId - authenticated user
+    // context.companyId - auto-fetched from user's company
+    // context.permissions - user's permissions
+    
+    const data = await db.customer.create({
+      data: {
+        ...input,
+        companyId: context.companyId // Automatic tenant scoping
+      }
+    });
+    return NextResponse.json({ data });
+  },
+  [PERMISSIONS.CUSTOMER_CREATE] // Required permissions
+);
+
+// Use permission guards in components
+import { PermissionGuard } from '@/shared/components/permission-guard';
 
 function MyComponent() {
-  const company = useCurrentCompany()
-  // Component automatically scoped to current company
+  return (
+    <PermissionGuard permission="customer:create">
+      <CreateButton />
+    </PermissionGuard>
+  );
 }
-
-// API routes automatically enforce tenant isolation
-export const GET = withApiMiddleware(handler, {
-  requireAuth: true,
-  requireCompany: true, // Ensures tenant context
-})
 ```
 
-## 🏢 Multi-Tenancy
+## 🏢 Multi-Tenancy & RBAC
 
-This boilerplate implements **row-level security** with automatic tenant isolation:
+This boilerplate implements **enterprise-grade multi-tenancy** with RBAC:
 
 - **Database Level** - All queries automatically scoped by `companyId`
-- **API Level** - Middleware enforces company context on all endpoints
-- **UI Level** - Components receive tenant-aware data
-- **Authentication** - Clerk integration with company switching
+- **API Level** - RBAC middleware enforces permissions on all endpoints
+- **UI Level** - Permission guards control feature access
+- **29 Permissions** - Across Organization, Billing, Team, Customers, API, Roles, System
+- **4 System Roles** - Owner (29), Admin (25), Member (7), Viewer (5) permissions
+- **Auto-Provisioning** - Roles and permissions created automatically per company
 
-See [TENANTING.md](./docs/TENANTING.md) for detailed architecture.
+See [docs/core/architecture/rbac-spec.md](./docs/core/architecture/rbac-spec.md) for detailed architecture.
 
 ## 🛠️ Available Scripts
 
@@ -89,29 +152,42 @@ npm run type-check   # Run TypeScript checks
 
 ### Core Directories
 
-- **`/core`** - Business logic and shared services
-  - `/auth` - Authentication and company context
-  - `/db` - Database client with tenant isolation
-  - `/automation` - Background jobs and workflows
-
-- **`/modules`** - Feature-specific code
-  - Each module contains its own components, routes, and schemas
-  - Promotes modularity and code organization
-
-- **`/src/app`** - Next.js App Router
-  - Pages, layouts, and API routes
-  - Marketing pages and dashboard
-
-- **`/src/components`** - Reusable UI components
-  - `/ui` - Base components (Button, Card, etc.)
-  - `/marketing` - Marketing page components
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── (marketing)/        # Public marketing pages
+│   ├── (app)/             # Authenticated dashboard
+│   │   └── dashboard/     # Main app interface
+│   └── api/               # RBAC-protected API routes
+│
+├── core/                  # Core infrastructure
+│   ├── auth/              # Clerk integration, company provider
+│   ├── db/                # Prisma client, tenant guards
+│   └── rbac/              # RBAC provisioning, default roles
+│
+├── features/              # Domain modules
+│   ├── billing/           # Stripe integration
+│   ├── companies/         # Company management
+│   ├── customers/         # Customer management
+│   └── users/             # Team management
+│
+├── shared/                # Shared utilities
+│   ├── components/        # Reusable components
+│   ├── hooks/             # React hooks (usePermissions)
+│   ├── lib/               # RBAC middleware, permissions
+│   └── ui/                # shadcn/ui base components
+│
+└── lib/                   # Server actions
+    └── actions/           # Domain-specific actions
+```
 
 ### Key Files
 
-- `site-config.ts` - Centralized configuration for easy customization
-- `middleware.ts` - Authentication and routing middleware
-- `schema.prisma` - Database schema with multi-tenant design
-- `api-middleware.ts` - API request handling and validation
+- `prisma/schema.prisma` - Database schema with RBAC tables
+- `src/middleware.ts` - Clerk authentication middleware
+- `src/shared/lib/permissions.ts` - 29 permission definitions
+- `src/shared/lib/rbac-middleware.ts` - API protection middleware
+- `src/core/rbac/provisioner.ts` - Automatic role provisioning
 
 ## 🔧 Configuration
 
@@ -144,10 +220,23 @@ See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for detailed instructions.
 
 ## 📚 Documentation
 
-- [**Customization Guide**](./docs/CUSTOMIZATION_GUIDE.md) - How to adapt for your SaaS
-- [**Multi-Tenancy Guide**](./docs/TENANTING.md) - Architecture and best practices
-- [**API Documentation**](./docs/API.md) - Endpoint reference
-- [**Contributing Guide**](./docs/CONTRIBUTING.md) - Development workflow
+### Essential Reading
+- [**LLM Onboarding**](./CASCADE_LLM_ONBOARDING.md) - Start here for complete overview
+- [**Authentication Fix Summary**](./AUTHENTICATION_FIX_SUMMARY.md) - Recent fixes (Oct 2025)
+- [**Current Status**](./docs/core/CURRENTNOTES.md) - Latest updates and next steps
+
+### Technical Documentation
+- [**Product Vision & Roadmap**](./docs/core/product-vision-and-roadmap.md) - Strategic direction
+- [**Product Status**](./docs/core/product-status.md) - Implementation status
+- [**Architecture Blueprint**](./docs/core/architecture-blueprint.md) - System architecture
+- [**RBAC Specification**](./docs/core/architecture/rbac-spec.md) - Permission system details
+- [**LLM System Context**](./docs/core/llm-system-context.md) - AI assistant reference
+- [**E2E Testing Guide**](./docs/core/E2E_TESTING_GUIDE.md) - Testing procedures
+
+### Development Guides
+- [**API Reference**](./docs/core/api-reference.md) - Endpoint documentation
+- [**RBAC Setup Guide**](./docs/users/guides/rbac-setup-guide.md) - Permission setup
+- [**Deployment Guide**](./docs/users/getting-started/DEPLOYMENT_GUIDE.md) - Production deployment
 
 ## 🧪 Testing
 
@@ -184,12 +273,49 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 Built with these amazing technologies:
-- [Next.js](https://nextjs.org/) - React framework
-- [Prisma](https://prisma.io/) - Database ORM
+- [Next.js 15](https://nextjs.org/) - React framework with App Router
+- [React 19](https://react.dev/) - UI library with latest features
+- [TypeScript 5](https://www.typescriptlang.org/) - Type safety
+- [Prisma 6](https://prisma.io/) - Database ORM
+- [PostgreSQL](https://www.postgresql.org/) - Database
 - [Clerk](https://clerk.dev/) - Authentication
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Stripe](https://stripe.com/) - Payment processing
+- [Tailwind CSS 4](https://tailwindcss.com/) - Utility-first CSS
+- [shadcn/ui](https://ui.shadcn.com/) - Re-usable components
+- [Zod](https://zod.dev/) - Schema validation
+- [Playwright](https://playwright.dev/) - E2E testing
+
+## 🎯 Key Features Deep Dive
+
+### Multi-Tenant Architecture
+- **Row-Level Security**: Every query automatically scoped by `companyId`
+- **Tenant Isolation**: Complete data separation between companies
+- **Company Switching**: Users can belong to multiple companies
+- **Automatic Provisioning**: RBAC roles created on company creation
+
+### RBAC System (29 Permissions)
+- **Organization** (6): settings, billing, members, roles, delete, transfer
+- **Billing** (5): view, manage, subscriptions, invoices, cancel
+- **Team** (4): view, invite, manage, remove
+- **Customers** (7): view, create, update, delete, export, import, manage
+- **API** (3): read, write, admin
+- **Roles** (2): view, manage
+- **System** (2): health, logs
+
+### Stripe Integration
+- **Subscription Management**: Create, update, cancel subscriptions
+- **Webhook Handling**: Automated event processing
+- **Customer Portal**: Self-service billing management
+- **Usage Tracking**: Ready for metered billing (Stripe v19)
+
+### Team Management
+- **Email Invitations**: Send invites with role assignment
+- **Bulk Operations**: Manage multiple users at once
+- **Activity Tracking**: Comprehensive audit trail
+- **Role Assignment**: Fine-grained permission control
 
 ---
 
-**Ready to build your SaaS?** Start customizing this boilerplate for your specific needs!
+**Ready to build your enterprise SaaS?** This boilerplate gives you months of development work out of the box.
+
+**Questions?** See [docs/core/CURRENTNOTES.md](./docs/core/CURRENTNOTES.md) for latest status or [AUTHENTICATION_FIX_SUMMARY.md](./AUTHENTICATION_FIX_SUMMARY.md) for troubleshooting.

@@ -71,6 +71,12 @@ export function UserActivityDashboard({
   }, [companyId, userId, filterType, dateRange]);
 
   const fetchActivities = async () => {
+    if (!companyId) {
+      console.warn('⚠️ No company ID provided, skipping activity fetch');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -79,10 +85,18 @@ export function UserActivityDashboard({
         dateRange,
       });
 
-      const response = await fetch(`/api/audit/activities?${params}`);
+      const url = `/api/audit/activities?${params}`;
+      
+      const headers: HeadersInit = {};
+      if (companyId) {
+        headers['x-company-id'] = companyId;
+      }
+      
+      const response = await fetch(url, { headers });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch activities');
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch activities: ${response.status} ${errorText}`);
       }
 
       const data = await response.json();

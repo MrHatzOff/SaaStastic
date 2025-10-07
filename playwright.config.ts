@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+
+// Load test environment variables
+dotenv.config({ path: path.resolve(__dirname, '.env.test') })
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -15,6 +20,12 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  /* Global test timeout - increased for company creation with RBAC provisioning */
+  timeout: 90 * 1000, // 90 seconds per test
+  
+  /* Global setup for Clerk authentication */
+  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
+  
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -28,13 +39,28 @@ export default defineConfig({
 
     /* Record video on failure */
     video: 'retain-on-failure',
+    
+    /* Increased navigation timeout for slow operations */
+    navigationTimeout: 60 * 1000, // 60 seconds
+    actionTimeout: 15 * 1000, // 15 seconds for actions
   },
 
   /* Configure projects for major browsers */
   projects: [
+    // Setup project to authenticate and save state
+    {
+      name: 'setup',
+      testMatch: /auth-setup\.ts/,
+    },
+    
+    // Authenticated tests that use the saved auth state
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.clerk/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     // Uncomment for cross-browser testing
