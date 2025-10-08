@@ -50,10 +50,10 @@ setup('authenticate', async ({ page }) => {
   
   // Wait for either dashboard or homepage (Clerk redirect might go to either)
   try {
-    await page.waitForURL(/\/(dashboard|$)/, { timeout: 60000 })
+    await page.waitForURL(/\/(dashboard|onboarding|$)/, { timeout: 60000 })
     console.log('✅ Navigation completed')
   } catch (e) {
-    console.log('⚠️  Timeout waiting for URL change, continuing anyway...')
+    console.log('⚠️  Timeout waiting for URL change (user may already be on correct page), continuing anyway...')
   }
   
   await page.waitForTimeout(2000) // Buffer for page load

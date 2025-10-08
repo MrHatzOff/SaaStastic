@@ -313,3 +313,34 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     PERMISSIONS.ROLE_VIEW,
   ],
 } as const;
+
+/**
+ * Helper Functions for Permission Checking
+ */
+
+/**
+ * Check if user has a specific permission
+ */
+export function checkPermission(userPermissions: string[], requiredPermission: string): boolean {
+  if (!requiredPermission) return false;
+  if (userPermissions.includes('*')) return true; // Wildcard permission
+  return userPermissions.includes(requiredPermission);
+}
+
+/**
+ * Check if user has ANY of the required permissions
+ */
+export function hasAnyPermission(userPermissions: string[], requiredPermissions: string[]): boolean {
+  if (requiredPermissions.length === 0) return true;
+  if (userPermissions.includes('*')) return true;
+  return requiredPermissions.some(permission => userPermissions.includes(permission));
+}
+
+/**
+ * Check if user has ALL of the required permissions
+ */
+export function hasAllPermissions(userPermissions: string[], requiredPermissions: string[]): boolean {
+  if (requiredPermissions.length === 0) return true;
+  if (userPermissions.includes('*')) return true;
+  return requiredPermissions.every(permission => userPermissions.includes(permission));
+}

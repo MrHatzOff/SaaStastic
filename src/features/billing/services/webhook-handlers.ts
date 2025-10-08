@@ -100,7 +100,7 @@ export class WebhookHandlers {
   /**
    * Handle checkout session completed
    */
-  private static async handleCheckoutSessionCompleted(
+  static async handleCheckoutSessionCompleted(
     event: Stripe.Event
   ): Promise<void> {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -134,7 +134,7 @@ export class WebhookHandlers {
   /**
    * Handle subscription created
    */
-  private static async handleSubscriptionCreated(
+  static async handleSubscriptionCreated(
     event: Stripe.Event
   ): Promise<void> {
     const subscription = event.data.object as Stripe.Subscription;
@@ -168,7 +168,7 @@ export class WebhookHandlers {
   /**
    * Handle subscription updated
    */
-  private static async handleSubscriptionUpdated(
+  static async handleSubscriptionUpdated(
     event: Stripe.Event
   ): Promise<void> {
     const subscription = event.data.object as Stripe.Subscription;
@@ -218,7 +218,7 @@ export class WebhookHandlers {
   /**
    * Handle subscription deleted
    */
-  private static async handleSubscriptionDeleted(
+  static async handleSubscriptionDeleted(
     event: Stripe.Event
   ): Promise<void> {
     const subscription = event.data.object as Stripe.Subscription;
@@ -261,7 +261,7 @@ export class WebhookHandlers {
   /**
    * Handle trial will end
    */
-  private static async handleTrialWillEnd(
+  static async handleTrialWillEnd(
     event: Stripe.Event
   ): Promise<void> {
     const subscription = event.data.object as Stripe.Subscription;
@@ -296,7 +296,7 @@ export class WebhookHandlers {
   /**
    * Handle invoice created
    */
-  private static async handleInvoiceCreated(
+  static async handleInvoiceCreated(
     event: Stripe.Event
   ): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
@@ -310,7 +310,7 @@ export class WebhookHandlers {
   /**
    * Handle invoice finalized
    */
-  private static async handleInvoiceFinalized(
+  static async handleInvoiceFinalized(
     event: Stripe.Event
   ): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
@@ -328,7 +328,7 @@ export class WebhookHandlers {
   /**
    * Handle invoice paid
    */
-  private static async handleInvoicePaid(
+  static async handleInvoicePaid(
     event: Stripe.Event
   ): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
