@@ -66,7 +66,7 @@ export default function CompaniesPage() {
       } else {
         alert(data.error || 'Failed to delete company')
       }
-    } catch (err) {
+    } catch (_err) {
       alert('Network error')
     }
   }

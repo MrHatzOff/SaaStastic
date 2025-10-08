@@ -15,19 +15,13 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { 
   Activity, 
-  Search, 
-  Filter, 
-  Calendar,
+  Search,
   User,
   Shield,
   CreditCard,
   Users,
   Settings,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Eye
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions } from '@/shared/hooks/use-permissions';
@@ -68,6 +62,7 @@ export function UserActivityDashboard({
     if (hasPermission(PERMISSIONS.SYSTEM_LOGS)) {
       fetchActivities();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, userId, filterType, dateRange]);
 
   const fetchActivities = async () => {

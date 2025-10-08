@@ -43,12 +43,14 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
   useEffect(() => {
     if (isLoaded && user) {
       loadUserCompanies()
+      setIsLoading(false)
     } else if (isLoaded && !user) {
       // User not authenticated, clear state
       setCurrentCompany(null)
       setCompanies([])
       setIsLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, user])
 
   // Update Clerk metadata when company changes (only if user exists)
@@ -107,31 +109,25 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
     }
   }
 
-  const createDefaultCompany = async () => {
-    try {
-      // Create a default company for new users
-      const response = await fetch('/api/companies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: `${user?.firstName || user?.username || 'My'}'s Company`,
-          slug: `company-${user?.id?.slice(0, 8) || 'default'}`,
-          description: 'Default company created on signup',
-        }),
-      })
-
-      if (response.ok) {
-        // Reload companies to get the new one
-        await loadUserCompanies()
-      } else {
-        console.error('Failed to create default company')
-      }
-    } catch (err) {
-      console.error('Failed to create default company:', err)
-    }
-  }
+  // Utility function for creating default companies (currently unused but kept for future use)
+  // const createDefaultCompany = async () => {
+  //   try {
+  //     const response = await fetch('/api/companies', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         name: `${user?.firstName || user?.username || 'My'}'s Company`,
+  //         slug: `company-${user?.id?.slice(0, 8) || 'default'}`,
+  //         description: 'Default company created on signup',
+  //       }),
+  //     })
+  //     if (response.ok) {
+  //       await loadUserCompanies()
+  //     }
+  //   } catch (err) {
+  //     console.error('Failed to create default company:', err)
+  //   }
+  // }
 
   const switchCompany = async (companyId: string) => {
     const company = companies.find(c => c.id === companyId)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 import { PrismaClient } from '@prisma/client'
 import { Ratelimit } from '@upstash/ratelimit'
@@ -365,7 +365,7 @@ export function withApiMiddleware(
 
       // Call the actual handler
       const response = await handler(req, context)
-      const duration = Date.now() - startTime
+      // const duration = Date.now() - startTime
       
       // TODO: Replace with proper structured logging service in production
       // console.log(`[${new Date().toISOString()}] ${method} ${url} - ${response.status} - ${duration}ms - user:${userId || 'anon'} - company:${companyId || 'none'} - role:${userRole || 'none'}`)

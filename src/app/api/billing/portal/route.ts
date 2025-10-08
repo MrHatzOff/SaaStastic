@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
       url: session.url,
     });
   } catch (error: unknown) {
-    console.error('Billing portal session error:', error);
+    // TODO: Replace with proper logging service in production
+    // console.error('Billing portal session error:', error);
 
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {

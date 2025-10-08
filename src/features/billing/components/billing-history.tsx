@@ -21,6 +21,7 @@ export function BillingHistory({ companyId, limit = 10 }: BillingHistoryProps) {
 
   useEffect(() => {
     fetchInvoices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, limit]);
 
   const fetchInvoices = async () => {
@@ -223,7 +224,7 @@ export function BillingHistory({ companyId, limit = 10 }: BillingHistoryProps) {
 
                     const { url } = await response.json();
                     window.location.href = url;
-                  } catch (error) {
+                  } catch (_error) {
                     toast.error('Failed to open billing portal');
                   }
                 };

@@ -181,7 +181,7 @@ export function TeamMembersList({
     return true;
   };
 
-  const canManageRole = (memberRole: Role): boolean => {
+  const canManageRole = (_memberRole: Role): boolean => {
     if (!hasPermission(PERMISSIONS.TEAM_ROLE_UPDATE)) return false;
     if (currentUserRole !== 'OWNER') return false;
     return true;

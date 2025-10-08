@@ -15,7 +15,7 @@ interface SubscriptionCardProps {
   onDowngrade?: () => void;
 }
 
-export function SubscriptionCard({ billingSummary, onUpgrade, onDowngrade }: SubscriptionCardProps) {
+export function SubscriptionCard({ billingSummary, onUpgrade }: SubscriptionCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleBillingPortal = async () => {

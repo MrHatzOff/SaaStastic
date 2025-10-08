@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/core/db/client';
 
@@ -7,7 +7,7 @@ import { db } from '@/core/db/client';
  * 
  * Check if user has completed onboarding (has a company)
  */
-export const GET = async (_request: NextRequest) => {
+export const GET = async () => {
   try {
     const { userId } = await auth();
     

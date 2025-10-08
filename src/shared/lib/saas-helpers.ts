@@ -252,19 +252,19 @@ export function createPaginatedResponse<T>(
  * Structured logging for API operations
  */
 export function logApiOperation(
-  operation: string,
-  context: ApiContext,
-  resourceId?: string,
-  metadata?: Record<string, unknown>
+  _operation: string,
+  _context: ApiContext,
+  _resourceId?: string,
+  _metadata?: Record<string, unknown>
 ) {
   // TODO: Replace with proper structured logging service in production
   // console.log(`[${new Date().toISOString()}] API Operation:`, {
-  //   operation,
-  //   userId: context.userId,
-  //   companyId: context.companyId,
-  //   userRole: context.userRole,
-  //   resourceId,
-  //   metadata,
+  //   operation: _operation,
+  //   userId: _context.userId,
+  //   companyId: _context.companyId,
+  //   userRole: _context.userRole,
+  //   resourceId: _resourceId,
+  //   metadata: _metadata,
   // });
 }
 /**

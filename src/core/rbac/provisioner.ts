@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from '@prisma/client'
 
-import { SYSTEM_ROLE_TEMPLATE_LIST, SYSTEM_ROLE_TEMPLATES } from './default-roles'
+import { SYSTEM_ROLE_TEMPLATE_LIST } from './default-roles'
 
 type ProvisioningClient = Prisma.TransactionClient | PrismaClient
 

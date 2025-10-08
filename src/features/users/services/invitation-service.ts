@@ -85,15 +85,12 @@ export class InvitationService {
     }
 
     // Check team size limits based on subscription
-    const teamSize = await db.userCompany.count({
-      where: { companyId },
-    });
-
-    const subscription = await db.subscription.findUnique({
-      where: { companyId },
-      select: { stripePriceId: true, status: true },
-    });
-
+    // TODO: Implement team size limits based on subscription tier
+    // const teamSize = await db.userCompany.count({ where: { companyId } });
+    // const subscription = await db.subscription.findUnique({
+    //   where: { companyId },
+    //   select: { stripePriceId: true, status: true },
+    // });
     // This would need to be integrated with StripeService.checkFeatureLimit
     // For now, we'll allow unlimited invitations
 

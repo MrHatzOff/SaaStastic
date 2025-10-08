@@ -58,7 +58,7 @@ export function createTenantGuard(
       return next(params)
     }
 
-    const { model, action, args } = params
+    const { model, action } = params
     
     // Only apply to tenant-scoped models
     if (!model || !TENANT_SCOPED_MODELS.includes(model.toLowerCase() as TenantScopedModel)) {

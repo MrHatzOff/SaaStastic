@@ -130,11 +130,12 @@ Keep domain-specific UI and logic inside `modules/<domain>/`, promote reusable p
 - Synchronize documentation, observability alerts, and onboarding materials after each release.
 
 ## 🗺️ Planned Evolution
-| Phase | Theme | Architecture Impact |
-| --- | --- | --- |
-| 1B | Polish & DX | Tighten lint/type configs, finalize documentation, stabilize workflows. |
-| 2 | Team Collaboration | Expand `modules/users/` with invitations, RBAC gating, activity feeds. |
-| 3 | Support & Ops | Introduce `/src/app/(admin)/`, observability adapters, impersonation guardrails. |
+| Phase | Status | Theme | Architecture Impact |
+| --- | --- | --- | --- |
+| 1B | ✅ Complete | Polish & DX | Tightened lint/type configs, finalized documentation, stabilized workflows. |
+| 2A | ✅ Complete | RBAC Core | Implemented 29 permissions, role management, API protection. |
+| 2B | ✅ Complete | Team UI | Expanded team management with invitations, RBAC gating, activity feeds, bulk operations. |
+| 3 | ⏳ Planned | Support & Ops | Introduce `/src/app/(admin)/`, observability adapters, impersonation guardrails. |
 ## ✅ Non-Negotiable Guardrails
 - Tenant isolation must be enforced by middleware; never trust client-provided `companyId`.
 - No console logging in production pathways—use structured log helper.

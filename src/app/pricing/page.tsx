@@ -17,7 +17,7 @@ export default function PricingPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {siteConfig.pricing.map((plan, index) => (
+        {siteConfig.pricing.map((plan) => (
           <Card key={plan.name} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
             {plan.popular && (
               <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">

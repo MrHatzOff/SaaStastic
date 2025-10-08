@@ -7,14 +7,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Users, UserPlus, Activity, Settings, Shield } from 'lucide-react';
+import { UserPlus, Users, Activity, Shield, Settings } from 'lucide-react';
 import { TeamMembersList } from './team-members-list';
 import { InviteMemberModal } from './invite-member-modal';
 import { UserActivityDashboard } from './user-activity-dashboard';
-import { usePermissions } from '@/shared/hooks/use-permissions';
 import { PermissionGuard } from '@/shared/components/permission-guard';
 import { PERMISSIONS } from '@/shared/lib/permissions';
 import type { Role } from '@prisma/client';
@@ -30,7 +35,6 @@ export function TeamManagementPage({
   currentUserRole,
   companyId,
 }: TeamManagementPageProps) {
-  const { hasPermission } = usePermissions();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 

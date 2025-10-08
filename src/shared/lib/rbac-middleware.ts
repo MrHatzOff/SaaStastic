@@ -32,7 +32,7 @@ export function withPermissions<T = unknown>(
   handler: (req: NextRequest, context: AuthenticatedContext) => Promise<NextResponse>,
   requiredPermissions: Permission[] = []
 ) {
-  return async (req: NextRequest, routeContext?: T): Promise<NextResponse> => {
+  return async (req: NextRequest, _routeContext?: T): Promise<NextResponse> => {
     try {
       // Get authentication from Clerk
       const { userId } = await auth();

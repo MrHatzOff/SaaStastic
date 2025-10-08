@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useCurrentCompany } from '@/core/shared'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
-import { Badge } from '@/shared/ui/badge'
+// Badge component available if needed for status indicators
+// import { Badge } from '@/shared/ui/badge'
 import { Plus, Mail, Phone, MapPin, Trash2, Edit } from 'lucide-react'
 import { CustomerFormModal } from '@/features/customers/customer-form-modal'
 
@@ -55,7 +56,7 @@ export default function CustomersPage() {
       } else {
         setError(data.error || 'Failed to fetch customers')
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Network error')
     } finally {
       setLoading(false)
@@ -76,7 +77,7 @@ export default function CustomersPage() {
       } else {
         alert(data.error || 'Failed to delete customer')
       }
-    } catch (err) {
+    } catch (_err) {
       alert('Network error')
     }
   }

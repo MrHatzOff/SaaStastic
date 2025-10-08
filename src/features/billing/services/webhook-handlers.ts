@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/core/db/client';
 import { StripeService } from './stripe-service';
@@ -528,14 +527,14 @@ export class WebhookHandlers {
   /**
    * Log webhook event for audit
    */
-  private static async logWebhookEvent(event: Stripe.Event): Promise<void> {
+  private static async logWebhookEvent(_event: Stripe.Event): Promise<void> {
     // Store webhook events for debugging and audit
     // This could be in a separate table or logging service
     // TODO: Replace with proper structured logging service in production
-    // console.log(`Webhook received: ${event.type}`, {
-    //   id: event.id,
-    //   type: event.type,
-    //   created: new Date(event.created * 1000),
+    // console.log(`Webhook received: ${_event.type}`, {
+    //   id: _event.id,
+    //   type: _event.type,
+    //   created: new Date(_event.created * 1000),
     // });
   }
 }

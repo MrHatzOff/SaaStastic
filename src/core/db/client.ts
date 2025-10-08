@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { provisionSystemRolesForCompany } from '@/core/rbac/provisioner'
 import { SYSTEM_ROLE_SLUGS } from '@/core/rbac/default-roles'
-import { createTenantGuard, type TenantContext } from './tenant-guard'
+import type { TenantContext } from './tenant-guard'
 
 /**
  * Enhanced Prisma Client with tenant isolation middleware
