@@ -1,8 +1,12 @@
 /**
  * RBAC Permission System
  * 
- * This file defines all available permissions in the system.
- * Permissions follow the pattern: resource:action
+ * Defines all 29 system permissions organized into 7 categories.
+ * Permissions follow the pattern: resource:action (e.g., 'customer:create', 'team:invite')
+ * 
+ * @module permissions
+ * @see docs/guides/RBAC_USAGE.md
+ * @see docs/guides/CUSTOMIZING_PERMISSIONS.md
  */
 
 export const PERMISSIONS = {
@@ -319,7 +323,21 @@ export const DEFAULT_ROLE_PERMISSIONS = {
  */
 
 /**
- * Check if user has a specific permission
+ * Check if user has a specific permission.
+ * 
+ * @param userPermissions - Array of permission strings the user has
+ * @param requiredPermission - The permission string to check for
+ * @returns true if user has the permission, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * const userPerms = ['customer:view', 'customer:create'];
+ * const canCreate = checkPermission(userPerms, 'customer:create'); // true
+ * const canDelete = checkPermission(userPerms, 'customer:delete'); // false
+ * ```
+ * 
+ * @see {@link hasAnyPermission}
+ * @see {@link hasAllPermissions}
  */
 export function checkPermission(userPermissions: string[], requiredPermission: string): boolean {
   if (!requiredPermission) return false;
@@ -328,7 +346,27 @@ export function checkPermission(userPermissions: string[], requiredPermission: s
 }
 
 /**
- * Check if user has ANY of the required permissions
+ * Check if user has ANY of the required permissions.
+ * Returns true if user has at least one of the specified permissions.
+ * 
+ * @param userPermissions - Array of permission strings the user has
+ * @param requiredPermissions - Array of permission strings to check
+ * @returns true if user has any of the required permissions
+ * 
+ * @example
+ * ```typescript
+ * const userPerms = ['customer:view', 'customer:create'];
+ * const requiredPerms = ['customer:update', 'customer:delete'];
+ * 
+ * // Returns false - user has neither permission
+ * hasAnyPermission(userPerms, requiredPerms);
+ * 
+ * // Returns true - user has customer:view
+ * hasAnyPermission(userPerms, ['customer:view', 'customer:delete']);
+ * ```
+ * 
+ * @see {@link checkPermission}
+ * @see {@link hasAllPermissions}
  */
 export function hasAnyPermission(userPermissions: string[], requiredPermissions: string[]): boolean {
   if (requiredPermissions.length === 0) return true;
@@ -337,7 +375,27 @@ export function hasAnyPermission(userPermissions: string[], requiredPermissions:
 }
 
 /**
- * Check if user has ALL of the required permissions
+ * Check if user has ALL of the required permissions.
+ * Returns true only if user has every single required permission.
+ * 
+ * @param userPermissions - Array of permission strings the user has
+ * @param requiredPermissions - Array of permission strings that are all required
+ * @returns true if user has all of the required permissions
+ * 
+ * @example
+ * ```typescript
+ * const userPerms = ['customer:view', 'customer:create', 'customer:update'];
+ * const requiredPerms = ['customer:view', 'customer:create'];
+ * 
+ * // Returns true - user has both permissions
+ * hasAllPermissions(userPerms, requiredPerms);
+ * 
+ * // Returns false - user missing customer:delete
+ * hasAllPermissions(userPerms, ['customer:view', 'customer:delete']);
+ * ```
+ * 
+ * @see {@link checkPermission}
+ * @see {@link hasAnyPermission}
  */
 export function hasAllPermissions(userPermissions: string[], requiredPermissions: string[]): boolean {
   if (requiredPermissions.length === 0) return true;

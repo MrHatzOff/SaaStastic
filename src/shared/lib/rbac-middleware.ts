@@ -1,7 +1,27 @@
 /**
  * RBAC Middleware for API Routes
  * 
- * Provides permission-based access control for API endpoints
+ * Provides comprehensive permission-based access control for Next.js API endpoints.
+ * Automatically handles authentication, tenant context resolution, and permission checking.
+ * 
+ * @module rbac-middleware
+ * @see docs/guides/RBAC_USAGE.md#protecting-api-routes
+ * @see docs/guides/CUSTOMIZING_PERMISSIONS.md
+ * 
+ * @example
+ * ```typescript
+ * // Protect an API route
+ * export const POST = withPermissions(
+ *   async (req, context) => {
+ *     // context.userId, context.companyId, context.permissions available
+ *     const data = await db.customer.create({
+ *       data: { ...input, companyId: context.companyId }
+ *     });
+ *     return NextResponse.json({ data });
+ *   },
+ *   [PERMISSIONS.CUSTOMER_CREATE] // Required permissions
+ * );
+ * ```
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,7 +46,63 @@ export interface AuthenticatedContext {
 }
 
 /**
- * Enhanced API middleware that includes RBAC permission checking
+ * Enhanced API middleware with RBAC permission checking.
+ * 
+ * Wraps your API route handler with:
+ * - Clerk authentication verification
+ * - Company context resolution (from headers or user's default)
+ * - User company membership validation
+ * - Permission checking against required permissions
+ * - Automatic error responses for auth/permission failures
+ * 
+ * @template T - Optional route context type for Next.js dynamic routes
+ * @param handler - Your API route handler function
+ * @param requiredPermissions - Array of permissions required to access this endpoint
+ * @returns Wrapped handler that enforces authentication and permissions
+ * 
+ * @example
+ * ```typescript
+ * // Single permission requirement
+ * export const POST = withPermissions(
+ *   async (req: NextRequest, context: AuthenticatedContext) => {
+ *     const { userId, companyId, permissions } = context;
+ *     
+ *     // Your logic here - user is authenticated and has permission
+ *     const customer = await db.customer.create({
+ *       data: {
+ *         ...data,
+ *         companyId, // Automatically scoped
+ *         createdBy: userId,
+ *       }
+ *     });
+ *     
+ *     return NextResponse.json({ customer });
+ *   },
+ *   [PERMISSIONS.CUSTOMER_CREATE]
+ * );
+ * 
+ * // Multiple permissions required
+ * export const DELETE = withPermissions(
+ *   async (req, context) => {
+ *     // User must have BOTH permissions
+ *     await db.customer.deleteMany({ where: { companyId: context.companyId } });
+ *     return NextResponse.json({ success: true });
+ *   },
+ *   [PERMISSIONS.CUSTOMER_DELETE, PERMISSIONS.CUSTOMER_EXPORT]
+ * );
+ * 
+ * // No permissions (just authentication)
+ * export const GET = withPermissions(
+ *   async (req, context) => {
+ *     // Just need to be authenticated, no specific permission
+ *     return NextResponse.json({ user: context.user });
+ *   }
+ * );
+ * ```
+ * 
+ * @see {@link AuthenticatedContext}
+ * @see {@link hasPermission}
+ * @see docs/guides/RBAC_USAGE.md
  */
 export function withPermissions<T = unknown>(
   handler: (req: NextRequest, context: AuthenticatedContext) => Promise<NextResponse>,
@@ -251,7 +327,30 @@ function getLegacyRolePermissions(role: string): Permission[] {
 }
 
 /**
- * Utility function to check if a user has a specific permission
+ * Check if a user has a specific permission in a company.
+ * Server-side utility function for permission checking outside of middleware.
+ * 
+ * @param userId - The user ID to check
+ * @param companyId - The company ID context
+ * @param permission - The permission string to check for
+ * @returns Promise resolving to true if user has permission, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * // In a server action or API route
+ * const canDelete = await hasPermission(
+ *   'user_123',
+ *   'company_456',
+ *   PERMISSIONS.CUSTOMER_DELETE
+ * );
+ * 
+ * if (!canDelete) {
+ *   throw new Error('Permission denied');
+ * }
+ * ```
+ * 
+ * @see {@link getUserPermissions}
+ * @see {@link withPermissions}
  */
 export async function hasPermission(
   userId: string,
@@ -293,7 +392,27 @@ export async function hasPermission(
 }
 
 /**
- * Get all permissions for a user in a company
+ * Get all permissions for a user in a company.
+ * Server-side utility to fetch complete permission list for a user.
+ * 
+ * @param userId - The user ID to get permissions for
+ * @param companyId - The company ID context
+ * @returns Promise resolving to array of permission strings
+ * 
+ * @example
+ * ```typescript
+ * // Get all user permissions
+ * const permissions = await getUserPermissions('user_123', 'company_456');
+ * console.log(`User has ${permissions.length} permissions:`, permissions);
+ * // ['customer:view', 'customer:create', 'team:view', ...]
+ * 
+ * // Check specific permissions
+ * const canCreate = permissions.includes(PERMISSIONS.CUSTOMER_CREATE);
+ * const canDelete = permissions.includes(PERMISSIONS.CUSTOMER_DELETE);
+ * ```
+ * 
+ * @see {@link hasPermission}
+ * @see {@link withPermissions}
  */
 export async function getUserPermissions(
   userId: string,
