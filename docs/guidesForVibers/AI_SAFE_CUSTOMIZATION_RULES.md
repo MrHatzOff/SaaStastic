@@ -39,6 +39,8 @@ tailwind.config.js (extend only)
 User: "Add a CRM module"
 AI: I'll create this in src/features/custom/crm/ to keep it safe from updates.
 
+[First, let me read GUIDES/00_LLM_CONTEXT.md and GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md]
+
 Created:
 - src/features/custom/crm/components/DealPipeline.tsx
 - src/features/custom/crm/services/deal-service.ts

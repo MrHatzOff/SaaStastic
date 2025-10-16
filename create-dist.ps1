@@ -19,6 +19,7 @@ $excludePatterns = @(
     "docs\shared",
     "docs\users",
     "docs\core",
+    "docs\guides",  # Old location - now using GUIDES/ at root
     
     # Root-level internal docs
     "docs\onboarding.md",
@@ -77,7 +78,8 @@ $autoExclude = @(
     "playwright-report",
     "coverage",
     ".clerk",
-    "playwright/.clerk"
+    "playwright/.clerk",
+    "*.tsbuildinfo"
 )
 
 function Test-ShouldExclude {
@@ -228,7 +230,8 @@ else {
             if (-not (Test-Path $destDir)) {
                 New-Item -ItemType Directory -Path $destDir -Force | Out-Null
             }
-            Copy-Item $fullPath $destPath -Force
+            # Use -LiteralPath to handle special characters like brackets
+            Copy-Item -LiteralPath $fullPath -Destination $destPath -Force
             $copiedFiles++
             
             if ($copiedFiles % 100 -eq 0) {

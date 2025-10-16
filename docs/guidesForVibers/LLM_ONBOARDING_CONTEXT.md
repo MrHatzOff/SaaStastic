@@ -12,15 +12,15 @@ This file provides complete context for AI assistants helping developers customi
 
 ### **1. Core System Context** (ALWAYS READ FIRST)
 ```
-📄 docs/core/llm-system-context.md
+📄 GUIDES/00_LLM_CONTEXT.md
 ```
 - **Why**: Complete project overview, tech stack, architecture
 - **When**: Start of EVERY session
-- **Read**: Sections 1-6 minimum (Product status, architecture, multi-tenancy, RBAC)
+- **Read**: Entire file (Product status, architecture, multi-tenancy, RBAC)
 
 ### **2. Safe Customization Guide** (READ BEFORE ANY CODE CHANGES)
 ```
-📄 docs/guides/SAFE_CUSTOMIZATION_GUIDE.md
+📄 GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md
 ```
 - **Why**: Learn what's safe to modify vs. what will break updates
 - **When**: Before creating or modifying ANY file
@@ -40,10 +40,10 @@ This file provides complete context for AI assistants helping developers customi
 
 **When you start helping a developer:**
 
-- [ ] **Step 1**: Read `docs/core/llm-system-context.md` (Section 1-6)
+- [ ] **Step 1**: Read `GUIDES/00_LLM_CONTEXT.md` (complete file)
 - [ ] **Step 2**: Ask developer: "What are you trying to build?"
 - [ ] **Step 3**: Based on their answer, read relevant guide (see Task Matrix below)
-- [ ] **Step 4**: Check if it's in a SAFE zone (docs/guides/SAFE_CUSTOMIZATION_GUIDE.md)
+- [ ] **Step 4**: Check if it's in a SAFE zone (GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md)
 - [ ] **Step 5**: If core file modification needed → **REFUSE** and offer safe alternative
 - [ ] **Step 6**: Generate code with ALL security patterns (multi-tenant, RBAC, validation)
 - [ ] **Step 7**: Verify code against checklist before presenting
@@ -57,9 +57,9 @@ This file provides complete context for AI assistants helping developers customi
 ### **Task: Adding a New Feature**
 
 **READ THESE FILES:**
-1. `docs/core/llm-system-context.md` (Section 3, 5, 6)
-2. `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md` (Safe Zones section)
-3. `docs/core/architecture-blueprint.md` (Module structure)
+1. `GUIDES/00_LLM_CONTEXT.md` (Architecture section)
+2. `GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md` (Safe Zones section)
+3. `.windsurf/rules/architecture.md` (Non-negotiable rules)
 
 **CREATE FILES IN:**
 ```
@@ -76,8 +76,8 @@ Developer: "I want to add a CRM module"
 
 AI Response:
 Let me read the relevant documentation first...
-[Read docs/core/llm-system-context.md sections 3, 5, 6]
-[Read docs/guides/SAFE_CUSTOMIZATION_GUIDE.md]
+[Read GUIDES/00_LLM_CONTEXT.md]
+[Read GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md]
 
 I'll create a CRM module in the safe zone:
 
@@ -97,9 +97,9 @@ Ready to proceed? (Y/n)
 ### **Task: Adding an API Endpoint**
 
 **READ THESE FILES:**
-1. `docs/core/llm-system-context.md` (Section 6: API Patterns)
+1. `GUIDES/00_LLM_CONTEXT.md` (API Patterns section)
 2. `.windsurf/rules/architecture.md` (Multi-tenant rules)
-3. `docs/core/api-reference.md` (API patterns)
+3. Existing API routes in `src/app/api/` (for patterns)
 
 **MUST INCLUDE:**
 - ✅ `withPermissions()` wrapper
@@ -178,7 +178,7 @@ export const POST = withPermissions(
 
 **READ THESE FILES:**
 1. `.windsurf/rules/architecture.md` (Database rules)
-2. `docs/core/llm-system-context.md` (Section 4: Multi-Tenancy)
+2. `GUIDES/00_LLM_CONTEXT.md` (Multi-Tenancy section)
 3. `prisma/schema.prisma` (See existing patterns)
 
 **MUST INCLUDE:**
@@ -245,8 +245,8 @@ npx prisma generate
 ### **Task: Creating a Page/Route**
 
 **READ THESE FILES:**
-1. `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md` (Custom Pages section)
-2. `docs/core/llm-system-context.md` (Section 3: Naming conventions)
+1. `GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md` (Custom Pages section)
+2. `GUIDES/00_LLM_CONTEXT.md` (Naming conventions section)
 
 **CREATE IN:**
 ```
@@ -291,7 +291,7 @@ export const metadata = {
 **⚠️ STOP! READ THIS FIRST:**
 
 **READ THESE FILES:**
-1. `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md` (Caution Zones section)
+1. `GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md` (Caution Zones section)
 
 **DECISION TREE:**
 
@@ -333,8 +333,8 @@ export function MyCustomDataTable(props) {
 ### **Task: Adding Custom Permissions**
 
 **READ THESE FILES:**
-1. `docs/core/llm-system-context.md` (Section 5: RBAC System)
-2. `docs/guides/RBAC_USAGE.md` (Permission patterns)
+1. `GUIDES/00_LLM_CONTEXT.md` (RBAC System section)
+2. `GUIDES/04_RBAC_USAGE.md` (Permission patterns)
 
 **DO NOT MODIFY:**
 - ❌ `src/shared/lib/permissions.ts` (Core permissions)
@@ -389,7 +389,7 @@ export const POST = withPermissions(
 ### **Task: Styling/Design Changes**
 
 **READ THESE FILES:**
-1. `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md` (Design Tokens section)
+1. `GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md` (Design Tokens section)
 
 **SAFE TO MODIFY:**
 - ✅ `tailwind.config.js` (extend, don't replace)
@@ -690,26 +690,19 @@ What permission are you checking for?
 
 **Core Documentation:**
 ```
-docs/core/llm-system-context.md          - Project overview
-docs/core/architecture-blueprint.md      - Architecture details
-docs/core/api-reference.md               - API patterns
-.windsurf/rules/architecture.md          - Non-negotiable rules
+GUIDES/00_LLM_CONTEXT.md                     - Project overview & architecture
+GUIDES/01_SETUP_GUIDE.md                     - Initial setup
+.windsurf/rules/architecture.md              - Non-negotiable rules
 ```
 
 **Developer Guides:**
 ```
-docs/guides/SAFE_CUSTOMIZATION_GUIDE.md  - Customization safety guide
-docs/guides/SETUP_GUIDE.md               - Initial setup
-docs/guides/RBAC_USAGE.md                - Permission system usage
-docs/guides/CUSTOMIZING_PERMISSIONS.md   - Custom permissions
-docs/guides/EXTENDING_TEAM_MANAGEMENT.md - Team features
-docs/guides/STRIPE_CUSTOMIZATION.md      - Billing customization
-```
-
-**Launch Planning:**
-```
-docs/launchPlan/MASTER_LAUNCH_PLAN.md    - Launch execution plan
-docs/launchPlan/DELIVERY_DECISION_MATRIX.md - Code delivery options
+GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md        - Customization safety guide
+GUIDES/04_RBAC_USAGE.md                      - Permission system usage
+GUIDES/06_CUSTOMIZING_PERMISSIONS.md         - Custom permissions
+GUIDES/08_EXTENDING_TEAM_MANAGEMENT.md       - Team features
+GUIDES/07_STRIPE_CUSTOMIZATION.md            - Billing customization
+GUIDES/03_FAQ.md                             - Common questions & troubleshooting
 ```
 
 ---
@@ -717,18 +710,18 @@ docs/launchPlan/DELIVERY_DECISION_MATRIX.md - Code delivery options
 ## 🎓 Learning Path for AI Models
 
 **Level 1: Basic Understanding** (Read these first)
-1. docs/core/llm-system-context.md (Sections 1-6)
-2. docs/guides/SAFE_CUSTOMIZATION_GUIDE.md (Safe Zones)
+1. GUIDES/00_LLM_CONTEXT.md (Complete file)
+2. GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md (Safe Zones)
 
 **Level 2: Implementation Patterns** (Read when building features)
-1. docs/core/api-reference.md
-2. docs/guides/RBAC_USAGE.md
-3. .windsurf/rules/architecture.md
+1. GUIDES/04_RBAC_USAGE.md (Permission patterns)
+2. .windsurf/rules/architecture.md (Security rules)
+3. Existing code in src/app/api/ (API patterns)
 
 **Level 3: Advanced Customization** (Read when requested)
-1. docs/guides/CUSTOMIZING_PERMISSIONS.md
-2. docs/guides/EXTENDING_TEAM_MANAGEMENT.md
-3. docs/guides/STRIPE_CUSTOMIZATION.md
+1. GUIDES/06_CUSTOMIZING_PERMISSIONS.md
+2. GUIDES/08_EXTENDING_TEAM_MANAGEMENT.md
+3. GUIDES/07_STRIPE_CUSTOMIZATION.md
 
 ---
 

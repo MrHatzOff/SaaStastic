@@ -336,6 +336,7 @@ model LicenseCustomer {
   lemonSqueezyOrderId      String?  @unique
   lemonSqueezyCustomerId   String?
   lemonSqueezySubscriptionId String? @unique
+  lemonSqueezyLicenseKey   String?  @unique  // LS auto-generated key (XXXX-XXXX-XXXX-XXXX)
   
   // Status
   isActive          Boolean      @default(true)
@@ -356,6 +357,7 @@ model LicenseCustomer {
   @@index([isActive])
   @@index([lemonSqueezyOrderId])
   @@index([lemonSqueezyCustomerId])
+  @@index([lemonSqueezyLicenseKey])
 }
 
 model SupportSession {

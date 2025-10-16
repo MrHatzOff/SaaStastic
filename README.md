@@ -10,7 +10,7 @@ SaaStastic is a production-ready multi-tenant B2B SaaS boilerplate that gives yo
 [![Tests](https://img.shields.io/badge/Tests-87%20Passing-success)](https://github.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**[📚 Documentation](./docs/SETUP_GUIDE.md)** • **[🎯 Live Demo](#)** • **[💬 Get Support](#support)**
+**[📚 Documentation](./GUIDES/)** • **[🚀 Quick Start](./GUIDES/01_SETUP_GUIDE.md)** • **[🎯 Live Demo](#)** • **[💬 Get Support](#support)**
 
 ---
 
@@ -102,7 +102,7 @@ npm install
 # Copy environment template
 cp .env.example .env.local
 
-# Add your keys (detailed guide in docs/SETUP_GUIDE.md):
+# Add your keys (detailed guide in GUIDES/01_SETUP_GUIDE.md):
 # - PostgreSQL database URL
 # - Clerk authentication keys
 # - Stripe payment keys
@@ -120,7 +120,9 @@ npm run dev
 
 **🎉 Done!** Visit `http://localhost:3000` - You now have a production-ready SaaS application.
 
-**Need help?** Our [comprehensive setup guide](./docs/SETUP_GUIDE.md) walks you through every step with troubleshooting for common issues.
+**Need help?** Our [comprehensive setup guide](./GUIDES/01_SETUP_GUIDE.md) walks you through every step with troubleshooting for common issues.
+
+👉 **All guides are numbered!** Start with `GUIDES/01_SETUP_GUIDE.md` and follow in order.
 
 ---
 
@@ -359,9 +361,12 @@ saastastic/
 │   ├── unit/                    # Vitest unit tests
 │   └── e2e/                     # Playwright E2E tests
 │
-└── docs/                        # Comprehensive documentation
-    ├── SETUP_GUIDE.md           # Getting started (<30 min)
-    └── guides/                  # Feature-specific guides
+└── GUIDES/                      # 📚 START HERE! Numbered guides
+    ├── README.md                # Guide index with recommended path
+    ├── 01_SETUP_GUIDE.md        # Getting started (<30 min)
+    ├── 02_TEST_SETUP_GUIDE.md   # Verify your setup (15 min)
+    ├── 03_FAQ.md                # Common questions
+    └── ...                      # All numbered in order!
 ```
 
 **Philosophy**: 
@@ -410,7 +415,7 @@ docker-compose up -d
 
 ### **Option 3: VPS** (Ubuntu/Debian)
 
-Traditional deployment to your own server. See our [complete deployment guide](./docs/SETUP_GUIDE.md#step-8-production-deployment).
+Traditional deployment to your own server. See our [complete deployment guide](./GUIDES/01_SETUP_GUIDE.md#step-8-production-deployment).
 
 ### **Production Checklist**
 
@@ -428,24 +433,30 @@ Before going live:
 
 ## 📚 Documentation & Support
 
-### **Getting Started**
-- 📘 [**Setup Guide**](./docs/SETUP_GUIDE.md) - Complete walkthrough (<30 min)
-- 🎥 [**Video Tutorial**](#) - Watch setup in action
-- 📖 [**Architecture Overview**](./docs/core/architecture-blueprint.md) - How it all works
+### **Getting Started** (Follow in Order!)
+- 📘 [**1. Setup Guide**](./GUIDES/01_SETUP_GUIDE.md) - Complete walkthrough (<30 min)
+- ✅ [**2. Test Setup**](./GUIDES/02_TEST_SETUP_GUIDE.md) - Verify everything works (15 min)
+- ❓ [**3. FAQ**](./GUIDES/03_FAQ.md) - Common questions answered
+- 📚 [**All Guides**](./GUIDES/) - Complete numbered guide list
 
-### **Development Guides**
-- 🔐 [**RBAC Usage Guide**](./docs/guides/RBAC_USAGE.md) - Using the permission system
-- ⚙️ [**Customizing Permissions**](./docs/guides/CUSTOMIZING_PERMISSIONS.md) - Add your own
-- 👥 [**Team Management Guide**](./docs/guides/EXTENDING_TEAM_MANAGEMENT.md) - Extending features
-- 💳 [**Stripe Customization**](./docs/guides/STRIPE_CUSTOMIZATION.md) - Billing setup
+### **Customization Guides** (Advanced)
+- 🔐 [**4. RBAC Usage**](./GUIDES/04_RBAC_USAGE.md) - Understanding permissions
+- 🛡️ [**5. Safe Customization**](./GUIDES/05_SAFE_CUSTOMIZATION_GUIDE.md) - What you can change
+- ⚙️ [**6. Custom Permissions**](./GUIDES/06_CUSTOMIZING_PERMISSIONS.md) - Add your own
+- 💳 [**7. Stripe Billing**](./GUIDES/07_STRIPE_CUSTOMIZATION.md) - Customize payments
+- 👥 [**8. Team Management**](./GUIDES/08_EXTENDING_TEAM_MANAGEMENT.md) - Extend features
 
-### **API Reference**
-- 📋 [**API Documentation**](./docs/core/api-reference.md) - All endpoints
-- 🔧 [**Database Schema**](./prisma/schema.prisma) - Models and relationships
-- 🎯 [**Permission List**](./src/shared/lib/permissions.ts) - All 29 permissions
+### **Testing Guides**
+- ✅ [**9. Test Suite Docs**](./GUIDES/09_TEST_SUITE_DOCUMENTATION.md) - What's tested
+- 🧪 [**10. Manual Testing**](./GUIDES/10_MANUAL_TESTING_GUIDE.md) - Manual procedures
+
+### **Technical Reference**
+- 🔧 [**Database Schema**](./prisma/schema.prisma) - All models and relationships
+- 🎯 [**Permission List**](./src/shared/lib/permissions.ts) - All 29 permissions defined
 
 ### **Troubleshooting**
-- 🐛 [**Common Issues**](./docs/SETUP_GUIDE.md#troubleshooting) - Solutions to 8+ problems
+- 🐛 [**Common Issues**](./GUIDES/03_FAQ.md) - Solutions to frequent problems
+- ✅ [**Test Guide**](./GUIDES/02_TEST_SETUP_GUIDE.md) - Verify your setup
 - 💬 [**GitHub Discussions**](https://github.com/your-org/saastastic/discussions) - Ask questions
 - 📧 [**Email Support**](mailto:support@saastastic.com) - Direct help
 
@@ -528,7 +539,7 @@ npm install
 # Follow setup guide → Ship features in days
 ```
 
-**[📚 Read Setup Guide](./docs/SETUP_GUIDE.md)** • **[🎯 See Live Demo](#)** • **[💬 Get Support](#support)**
+**[📚 View All Guides](./GUIDES/)** • **[🚀 Quick Start](./GUIDES/01_SETUP_GUIDE.md)** • **[🎯 See Live Demo](#)** • **[💬 Get Support](#support)**
 
 ---
 
@@ -569,7 +580,7 @@ This project stands on the shoulders of giants:
 
 **Stop building infrastructure. Start shipping features.**
 
-[Get Started →](./docs/SETUP_GUIDE.md)
+[Get Started →](./GUIDES/)
 
 Made with ❤️ for developers who want to move fast
 
