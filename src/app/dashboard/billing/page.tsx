@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SubscriptionCard } from '@/features/billing/components/subscription-card';
 import { BillingHistory } from '@/features/billing/components/billing-history';
-import { Loader2 } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { PermissionGuard } from '@/shared/components/permission-guard';
+import { PERMISSIONS } from '@/shared/lib/permissions';
+import { Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import type { BillingSummary } from '@/features/billing/types/billing-types';
 
@@ -13,6 +16,7 @@ export default function BillingPage() {
   const [billingSummary, setBillingSummary] = useState<BillingSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
 
   useEffect(() => {
     fetchBillingSummary();
@@ -47,6 +51,34 @@ export default function BillingPage() {
   const handleDowngrade = () => {
     // Implement downgrade logic
     toast.info('Contact support to downgrade your plan');
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      setIsPortalLoading(true);
+      
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          returnUrl: `${window.location.origin}/dashboard/billing`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create portal session');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err) {
+      console.error('Error creating portal session:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to open billing portal');
+      setIsPortalLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -109,12 +141,36 @@ export default function BillingPage() {
         {/* Main Content */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Subscription Card */}
-          <div>
+          <div className="space-y-4">
             <SubscriptionCard
               billingSummary={billingSummary}
               onUpgrade={handleUpgrade}
               onDowngrade={handleDowngrade}
             />
+            
+            {/* Manage Billing Button */}
+            {billingSummary.subscription && (
+              <PermissionGuard permission={PERMISSIONS.BILLING_PORTAL}>
+                <Button
+                  onClick={handleManageBilling}
+                  disabled={isPortalLoading}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {isPortalLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Opening Portal...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Manage Subscription
+                    </>
+                  )}
+                </Button>
+              </PermissionGuard>
+            )}
           </div>
 
           {/* Placeholder for future features */}

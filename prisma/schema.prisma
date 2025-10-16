@@ -301,3 +301,97 @@ enum InvoiceStatus {
   UNCOLLECTIBLE
   VOID
 }
+
+// ===================================
+// SAASTASTIC LICENSE MANAGEMENT
+// For tracking customers who purchase SaaStastic boilerplate
+// ===================================
+
+enum LicenseTier {
+  STARTER      // $399 - 1 project, community support
+  PROFESSIONAL // $997 - 1 project, 30 days email support
+  AGENCY       // $4,997 - Unlimited projects, priority support
+  ENTERPRISE   // $9,997/year - White-label, 24hr SLA
+  FOREVER      // $20,000 - Lifetime everything
+}
+
+model LicenseCustomer {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  name              String?
+  tier              LicenseTier
+  licenseKey        String       @unique
+  githubUsername    String?
+  
+  // Purchase tracking
+  purchaseDate      DateTime     @default(now())
+  renewalDate       DateTime?    // For Enterprise subscriptions
+  expiresAt         DateTime?    // When license expires (null = forever)
+  
+  // Support tracking
+  supportHours      Int          @default(0)  // Remaining support hours
+  supportExpiresAt  DateTime?    // When support hours expire
+  
+  // Payment tracking
+  lemonSqueezyOrderId      String?  @unique
+  lemonSqueezyCustomerId   String?
+  lemonSqueezySubscriptionId String? @unique
+  
+  // Status
+  isActive          Boolean      @default(true)
+  isCancelled       Boolean      @default(false)
+  cancelledAt       DateTime?
+  
+  // Metadata
+  metadata          Json?        // Store additional info (custom fields, notes, etc.)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  // Relations
+  supportSessions   SupportSession[]
+  
+  @@index([email])
+  @@index([tier])
+  @@index([licenseKey])
+  @@index([isActive])
+  @@index([lemonSqueezyOrderId])
+  @@index([lemonSqueezyCustomerId])
+}
+
+model SupportSession {
+  id                String          @id @default(cuid())
+  licenseCustomerId String
+  
+  // Session details
+  scheduledAt       DateTime
+  completedAt       DateTime?
+  durationMinutes   Int             @default(60)
+  hoursUsed         Int             @default(1) // How many hours this consumed
+  
+  // Session content
+  topic             String?
+  notes             String?
+  recording         String?         // URL to recording if applicable
+  
+  // Status
+  status            SupportStatus   @default(SCHEDULED)
+  
+  // Metadata
+  metadata          Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  customer          LicenseCustomer @relation(fields: [licenseCustomerId], references: [id], onDelete: Cascade)
+  
+  @@index([licenseCustomerId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+enum SupportStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}

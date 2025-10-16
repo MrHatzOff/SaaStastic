@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { db } from '@/core/db/client';
 import { StripeService } from './stripe-service';
+import { BillingEmailService } from './email-service';
 import type { HandledStripeEvent } from '../types/billing-types';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -231,7 +232,7 @@ export class WebhookHandlers {
       // Get a user for logging
       const userCompany = await db.userCompany.findFirst({
         where: { companyId, role: 'OWNER' },
-        select: { userId: true },
+        select: { userId: true, user: { select: { email: true, name: true } } },
       });
 
       if (userCompany) {
@@ -247,10 +248,32 @@ export class WebhookHandlers {
             },
           },
         });
-      }
 
-      // Send cancellation email
-      // await EmailService.sendSubscriptionCanceled(companyId);
+        // Send cancellation email
+        const plan = StripeService.getSubscriptionPlan(subscription.items.data[0].price.id);
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        
+        // Stripe v19: Access period properties with type assertion
+        const sub = subscription as unknown as {
+          current_period_end?: number;
+          currentPeriodEnd?: number;
+        } & Stripe.Subscription;
+        
+        const periodEnd = sub.current_period_end || sub.currentPeriodEnd || Math.floor(Date.now() / 1000);
+        const endDate = new Date(periodEnd * 1000).toLocaleDateString();
+        
+        await BillingEmailService.sendSubscriptionCancelledEmail(
+          userCompany.user.email,
+          {
+            customerName: userCompany.user.name || userCompany.user.email,
+            planName: plan?.name || 'Subscription',
+            endDate,
+            portalUrl: `${baseUrl}/dashboard/billing`,
+            reactivateUrl: `${baseUrl}/dashboard/billing`,
+            feedbackUrl: undefined, // Can add feedback form URL later
+          }
+        );
+      }
 
       // Optionally revoke access or downgrade to free tier
       // await this.handleAccessRevocation(companyId);
@@ -340,7 +363,7 @@ export class WebhookHandlers {
       // Log successful payment
       const userCompany = await db.userCompany.findFirst({
         where: { companyId, role: 'OWNER' },
-        select: { userId: true },
+        select: { userId: true, user: { select: { email: true, name: true } } },
       });
 
       if (userCompany) {
@@ -356,10 +379,32 @@ export class WebhookHandlers {
             },
           },
         });
-      }
 
-      // Send payment confirmation email
-      // await EmailService.sendPaymentConfirmation(companyId, invoice);
+        // Send payment successful email
+        const subscription = await db.subscription.findUnique({
+          where: { companyId },
+          select: { stripePriceId: true, currentPeriodEnd: true },
+        });
+
+        if (subscription) {
+          const plan = StripeService.getSubscriptionPlan(subscription.stripePriceId);
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          
+          await BillingEmailService.sendPaymentSuccessfulEmail(
+            userCompany.user.email,
+            {
+              customerName: userCompany.user.name || userCompany.user.email,
+              planName: plan?.name || 'Subscription',
+              amount: invoice.amount_paid,
+              currency: invoice.currency,
+              invoiceNumber: invoice.number || undefined,
+              invoiceUrl: invoice.hosted_invoice_url || undefined,
+              nextBillingDate: subscription.currentPeriodEnd.toLocaleDateString(),
+              portalUrl: `${baseUrl}/dashboard/billing`,
+            }
+          );
+        }
+      }
     }
   }
 
@@ -379,7 +424,7 @@ export class WebhookHandlers {
       // Log failed payment
       const userCompany = await db.userCompany.findFirst({
         where: { companyId, role: 'OWNER' },
-        select: { userId: true },
+        select: { userId: true, user: { select: { email: true, name: true } } },
       });
 
       if (userCompany) {
@@ -396,10 +441,32 @@ export class WebhookHandlers {
             },
           },
         });
-      }
 
-      // Send payment failed email with update payment method link
-      // await EmailService.sendPaymentFailed(companyId, invoice);
+        // Send payment failed email with update payment method link
+        const subscription = await db.subscription.findUnique({
+          where: { companyId },
+          select: { stripePriceId: true },
+        });
+
+        if (subscription) {
+          const plan = StripeService.getSubscriptionPlan(subscription.stripePriceId);
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          
+          await BillingEmailService.sendPaymentFailedEmail(
+            userCompany.user.email,
+            {
+              customerName: userCompany.user.name || userCompany.user.email,
+              planName: plan?.name || 'Subscription',
+              amount: invoice.amount_due,
+              currency: invoice.currency,
+              nextRetryDate: invoice.next_payment_attempt 
+                ? new Date(invoice.next_payment_attempt * 1000).toLocaleDateString()
+                : undefined,
+              portalUrl: `${baseUrl}/dashboard/billing`,
+            }
+          );
+        }
+      }
 
       // Implement dunning management
       await this.handleDunning(companyId, invoice);

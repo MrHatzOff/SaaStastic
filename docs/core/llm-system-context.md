@@ -1,21 +1,55 @@
 # SaaStastic LLM Implementation Context
 
-Purpose: provide Cascade LLMs with authoritative context so every contribution aligns with SaaStastic's enterprise-grade architecture, roadmap, and guardrails.
+**Last Updated**: October 9, 2025  
+**Purpose**: Provide Cascade LLMs with authoritative context for SaaStastic, a production-ready multi-tenant B2B SaaS boilerplate ready for commercial launch.
 
 ---
 
-## 1. Product Vision & Status
-- **Vision**: Deliver the most trusted, production-ready multi-tenant B2B SaaS starter that ships enterprise capabilities in days, not months.
-- **Pillars**: Security & Compliance, Developer Velocity, Enterprise Reliability, Scalable Architecture.
-- **Current Phase**: Phase 2B (Team Management UI enhancements) with Phases 1A/1B/2A complete.
-- **Personas**: Founding engineers, platform teams, agencies.
+## 🚀 TL;DR - Read This First
+
+**What**: Enterprise B2B SaaS boilerplate with multi-tenancy, RBAC, Stripe, Clerk auth  
+**Status**: 95% launch-ready (6-8 hours remaining work)  
+**Next**: Complete pre-launch tasks in `docs/launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md`  
+**Tech**: Next.js 15, React 19, TypeScript 5, Prisma 6, PostgreSQL, TailwindCSS 4  
+**Tests**: 87 passing (60 unit + 27 E2E)  
+**Docs**: 6 customer guides complete (docs/guides/)  
+
+**Critical Missing**:
+- 🔴 Stripe Customer Portal (3 hrs) - Self-service billing
+- 🔴 Billing notification emails (3 hrs) - Payment alerts
+
+**After Pre-Launch**: Execute 7-day launch plan → Monitor → Build based on customer demand
+
+**New to this project?** Read Section 15 (Quick Onboarding Checklist) below, then `docs/launchPlan/NEW_SESSION_SUMMARY.md`
+
+---
+
+## 1. Product Vision & Current Status
+
+### Vision
+Deliver the most trusted, production-ready multi-tenant B2B SaaS starter that ships enterprise capabilities in days, not months.
+
+### **Current Status: 95% Launch Ready** 🚀
+- **Product**: Complete enterprise-grade foundation
+- **Documentation**: 6 customer guides ready
+- **Tests**: 87 passing (60 unit + 27 E2E)
+- **Target Market**: Developers building B2B SaaS ($399-$20k pricing tiers)
+- **Go-To-Market**: 7-day launch plan ready (Lemon Squeezy + GitHub delivery)
+
+### Critical Pre-Launch Items (6-8 hours remaining)
+- 🔴 **Stripe Customer Portal** - Self-service billing management
+- 🔴 **Billing Notification Emails** - Payment failed/successful/cancelled emails
+- ⚠️ See `docs/launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md` for details
 
 ### Completion Snapshot
-- ✅ **Authentication & Tenant Context** – Clerk integration, company selector, tenant guards.
-- ✅ **Billing & Monetization** – Stripe checkout, subscription lifecycle, webhooks, portal access.
-- ✅ **RBAC Core** – 29 permissions, system roles, middleware, frontend guards.
-- 🟨 **Team Collaboration UI** – Enhanced role assignment, invitations, bulk management in progress.
-- ⬜ **Support & Operations** – Admin portal, health monitoring, impersonation guardrails (Phase 3).
+- ✅ **Authentication & Tenant Context** – Clerk integration, company selector, tenant guards
+- ✅ **Billing & Monetization** – Stripe checkout, subscription lifecycle, webhooks
+- ✅ **RBAC System** – 29 permissions, 4 system roles, middleware, frontend guards, provisioning
+- ✅ **Team Management** – Role assignment, email invitations, bulk operations, activity logs
+- ✅ **Customer Documentation** – 6 comprehensive guides for buyers
+- 🔴 **Customer Portal** – Need billing self-service (3 hours)
+- 🔴 **Email Notifications** – Need payment alerts (3 hours)
+- ⬜ **Admin Support Portal** – Deferred to post-launch (build if 15+ support requests/week)
 
 ---
 
@@ -169,26 +203,61 @@ Detailed spec: `docs/core/architecture/rbac-spec.md`.
 ---
 
 ## 11. Documentation Map
-- `docs/core/product-vision-and-roadmap.md` – strategic goals and phase status.
-- `docs/core/architecture-blueprint.md` – canonical architecture, patterns, and guardrails.
-- `docs/core/architecture/rbac-spec.md` – RBAC technical deep dive.
-- `docs/core/api-reference.md` – API patterns and endpoint catalog.
-- `docs/core/enterprise-boilerplate-roadmap.md` – checklist toward full enterprise boilerplate.
-- `docs/users/guides/rbac-setup-guide.md` – adopter-facing RBAC instructions.
-- `.windsurf/workflows/*.md` – codified workflows (API development, database changes, LLM context reminders).
+
+### Launch Planning (CRITICAL - Start Here)
+- `docs/launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md` – **DO FIRST**: Stripe portal + billing emails (6-8 hrs)
+- `docs/launchPlan/MASTER_LAUNCH_PLAN.md` – 7-day launch execution plan (Days 1-7)
+- `docs/launchPlan/POST_LAUNCH_ROADMAP.md` – Post-launch features (build based on demand)
+- `docs/launchPlan/NEW_SESSION_SUMMARY.md` – Quick start for new chat sessions
+- `docs/launchPlan/5_TIER_PRICING_MODEL.md` – Pricing structure ($399 to $20k)
+- `docs/launchPlan/LAUNCH_OPERATIONS_GUIDE.md` – Licensing, delivery, support operations
+
+### Customer-Facing Documentation (What Buyers Get)
+- `docs/guides/SETUP_GUIDE.md` – Comprehensive setup (951 lines)
+- `docs/guides/RBAC_USAGE.md` – Permission system usage (18KB)
+- `docs/guides/CUSTOMIZING_PERMISSIONS.md` – How to customize permissions (17KB)
+- `docs/guides/EXTENDING_TEAM_MANAGEMENT.md` – Team management customization (24KB)
+- `docs/guides/STRIPE_CUSTOMIZATION.md` – Billing customization (22KB)
+- `docs/guides/FAQ.md` – Common questions (437 lines, 30+ Q&As)
+
+### Internal Development Reference
+- `docs/core/llm-system-context.md` – **THIS FILE**: LLM onboarding context
+- `docs/core/architecture-blueprint.md` – Canonical architecture and patterns
+- `docs/core/architecture/rbac-spec.md` – RBAC technical specification
+- `docs/core/api-reference.md` – API patterns and endpoint catalog
+- `docs/core/coding-standards-and-workflows.md` – Development standards
+- `.windsurf/workflows/*.md` – Codified workflows (API development, database changes)
+
+### Archive (Historical - Ignore These)
+- `docs/archived/session-summaries/` – Old session notes
+- `docs/archived/old-plans/` – Superseded planning documents
+- `docs/archived/completed-tasks/` – Completed historical tasks
 
 Keep this file synchronized when any referenced document or architectural decision changes.
 
 ---
 
-## 12. When Implementing Features
-1. **Confirm scope** with roadmap and check `enterprise-boilerplate-roadmap.md` for pending tasks.
+## 12. Launch Context & Next Steps
+
+### Immediate Priority: Pre-Launch Tasks (6-8 hours)
+Before launching, complete these critical features in `docs/launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md`:
+1. **Stripe Customer Portal API** (3 hours) – Allow customers to manage billing themselves
+2. **Billing Notification Emails** (3 hours) – Payment failed/successful/cancelled notifications
+
+### Post-Launch Strategy
+- **Week 1**: Monitor customer feedback, fix pain points
+- **Month 2**: Decide on admin portal (only if 15+ support requests/week)
+- **Month 3**: Consider support ticketing system (buy vs. build decision)
+- **Build based on demand**, not assumptions – see `docs/launchPlan/POST_LAUNCH_ROADMAP.md`
+
+### When Implementing New Features
+1. **Check launch docs first** – Is this pre-launch critical or post-launch optional?
 2. **Locate domain module** (`features/<domain>/`) and review existing patterns/components/types.
 3. **Design data contracts**: Update Prisma (if needed), adjust Zod schemas, ensure tenant scoping.
 4. **Implement server logic** using `withApiMiddleware` + `withPermissions`.
 5. **Build UI** with permission-aware components, loading/error states.
 6. **Write tests** spanning unit → integration → E2E as appropriate.
-7. **Update documentation & roadmaps** to reflect new capability.
+7. **Update documentation** in `docs/guides/` if customer-facing.
 8. **Run validation suite** before merging.
 
 ---
@@ -204,10 +273,40 @@ Keep this file synchronized when any referenced document or architectural decisi
 
 ---
 
-## 14. Contact Points (for Documentation)
-- Architecture decisions → Update `docs/core/architecture-blueprint.md` + ADR (if required).
-- Feature completion → Update `docs/core/product-status.md` & `enterprise-boilerplate-roadmap.md`.
-- RBAC changes → Sync `docs/core/architecture/rbac-spec.md`, `docs/users/guides/rbac-setup-guide.md`, and this file.
+## 14. Documentation Update Guidelines
+
+### When to Update Documentation
+- **Customer guides** (`docs/guides/`) – When features change that affect customer usage
+- **Launch plans** (`docs/launchPlan/`) – When pricing, delivery, or go-to-market changes
+- **This file** (`docs/core/llm-system-context.md`) – When architecture, patterns, or status changes
+- **Architecture** (`docs/core/architecture-blueprint.md`) – When core design decisions change
+- **RBAC spec** (`docs/core/architecture/rbac-spec.md`) – When permissions or roles change
+
+### What NOT to Update
+- **Archived files** (`docs/archived/`) – Never update, these are historical records
+- **Old planning docs** – Archived for reference only
 
 ---
-*Last updated: October 5, 2025 - Added Clerk 6.x authentication patterns and RBAC middleware fixes*
+
+## 15. Quick Onboarding Checklist
+
+### For New Chat Sessions (Start Here)
+1. ✅ Read **Section 1** (Product Status) – Understand we're 95% launch-ready
+2. ✅ Review **Section 11** (Documentation Map) – Know where files are
+3. ✅ Check **Section 12** (Launch Context) – Understand pre-launch priorities
+4. ✅ Read `docs/launchPlan/NEW_SESSION_SUMMARY.md` – Full context for new sessions
+
+### Before Making Code Changes
+1. ✅ Understand **Section 4** (Multi-Tenancy Rules) – NON-NEGOTIABLE security
+2. ✅ Review **Section 5** (RBAC System) – Permission requirements
+3. ✅ Check **Section 6** (API Patterns) – Clerk 6.x auth patterns (critical!)
+4. ✅ Follow **Section 3** (Naming & Coding Standards)
+
+### For Pre-Launch Work
+1. ✅ Open `docs/launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md`
+2. ✅ Implement Stripe Customer Portal (Task 1.1-1.4)
+3. ✅ Implement Billing Emails (Task 2.1-2.3)
+4. ✅ Test thoroughly before launch
+
+---
+*Last updated: October 9, 2025 - Updated for launch readiness, reorganized documentation structure*

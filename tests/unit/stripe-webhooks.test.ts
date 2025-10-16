@@ -16,6 +16,10 @@ vi.mock('@/core/db/client', () => ({
       upsert: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockResolvedValue({}),
       delete: vi.fn().mockResolvedValue({}),
+      findUnique: vi.fn().mockResolvedValue({ 
+        stripePriceId: 'price_123', 
+        currentPeriodEnd: new Date('2025-11-09')
+      }),
     },
     invoice: {
       create: vi.fn().mockResolvedValue({}),
@@ -26,15 +30,33 @@ vi.mock('@/core/db/client', () => ({
       create: vi.fn().mockResolvedValue({}),
     },
     userCompany: {
-      findFirst: vi.fn().mockResolvedValue({ userId: 'user_123' }),
+      findFirst: vi.fn().mockResolvedValue({ 
+        userId: 'user_123',
+        user: {
+          email: 'test@example.com',
+          name: 'Test User'
+        }
+      }),
     },
     company: {
-      findFirst: vi.fn().mockResolvedValue({ id: 'company_123' }),
+      findFirst: vi.fn().mockResolvedValue({ 
+        id: 'company_123',
+        users: [{ user: { email: 'test@example.com' } }]
+      }),
       update: vi.fn().mockResolvedValue({}),
     },
     paymentMethod: {
       deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
+  },
+}));
+
+// Mock email service
+vi.mock('@/features/billing/services/email-service', () => ({
+  BillingEmailService: {
+    sendPaymentFailedEmail: vi.fn().mockResolvedValue(undefined),
+    sendPaymentSuccessfulEmail: vi.fn().mockResolvedValue(undefined),
+    sendSubscriptionCancelledEmail: vi.fn().mockResolvedValue(undefined),
   },
 }));
 

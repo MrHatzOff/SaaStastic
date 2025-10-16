@@ -1,233 +1,133 @@
-# SPEC-001-SaaS-Boilerplate
+# 📚 SaaStastic Documentation Index
 
-## Background
+**Last Updated**: October 9, 2025  
+**Status**: Organized and Launch-Ready
 
-This repo is intended to be a **reusable SaaS boilerplate** for building multi-tenant B2B SaaS applications. It should serve as the foundation for this project (our business management app) and other SaaS projects. The boilerplate emphasizes:
+---
 
-* Next.js frontend with modular structure
-* PostgreSQL with Prisma ORM
-* Clerk authentication with unified marketing + B2B flow
-* Multi-tenant support from day one
-* Clean repo documentation, rules, and developer onboarding
-* Extensible file structure for adding new modules
+## 🎯 START HERE
 
-## Requirements
+### **New to SaaStastic?**
+→ Read **[`launchPlan/NEW_SESSION_SUMMARY.md`](./launchPlan/NEW_SESSION_SUMMARY.md)** first
 
-### Must Haves
+### **Ready to Launch?**
+→ Follow **[`launchPlan/MASTER_LAUNCH_PLAN.md`](./launchPlan/MASTER_LAUNCH_PLAN.md)**
 
-* **Next.js app** with modular folder structure
-* **Database:** PostgreSQL via Prisma
+### **Need Context?**
+→ Check **[`core/llm-system-context.md`](./core/llm-system-context.md)**
 
-  * **Development DB:** Local Postgres install (Windows/Chocolatey or native)
-  * **Production DB:** Neon (serverless managed Postgres)
-* **Auth:** Clerk for production with unified marketing + B2B experience
-* **Schema:** Core models (User, Company, Customer, EventLog, Feedback)
-* **Multi-tenant enforcement:** `companyId` scoping, simplified tenant setup
-* **Roles:** `owner`, `admin`, `member`
-* **Unified Experience:** Marketing pages + B2B app in single codebase
-* **Onboarding Flow:** First-time users → Company setup → Dashboard
-* **Documentation files:** PRD, Vision, Contributing/Dev, Windsurf Rules, Tenanting.md
-* **Windsurf Rules** file for LLM-assisted coding
-* **README.md** with tech stack, dev env setup, and usage
+---
 
-```
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/               # REST API routes with middleware
-│   │   ├── dashboard/         # Protected dashboard pages
-│   │   └── onboarding/        # Company setup flow
-│   ├── components/            # Reusable UI components
-│   │   ├── ui/               # Base UI components
-│   │   └── customers/        # Customer-specific components
-│   └── core/                 # Business logic and utilities
-│       ├── auth/             # Authentication & company context
-│       └── db/               # Database client & tenant guards
-├── prisma/
-│   └── schema.prisma         # Database schema with multi-tenancy
-└── docs/                     # Documentation
-```
+## 📁 Documentation Structure
 
-## 🔧 Setup & Development
+### **launchPlan/** - Your Launch Roadmap ⭐
+Your primary focus for getting to market:
+- **[NEW_SESSION_SUMMARY.md](./launchPlan/NEW_SESSION_SUMMARY.md)** - Start every session here
+- **[MASTER_LAUNCH_PLAN.md](./launchPlan/MASTER_LAUNCH_PLAN.md)** - 7-day launch timeline
+- **[PRE_LAUNCH_CRITICAL_TASKS.md](./launchPlan/PRE_LAUNCH_CRITICAL_TASKS.md)** - ✅ Complete!
+- **[POST_LAUNCH_ROADMAP.md](./launchPlan/POST_LAUNCH_ROADMAP.md)** - Features after launch
+- **[5_TIER_PRICING_MODEL.md](./launchPlan/5_TIER_PRICING_MODEL.md)** - Pricing reference
+- **[LAUNCH_OPERATIONS_GUIDE.md](./launchPlan/LAUNCH_OPERATIONS_GUIDE.md)** - Operations details
+- **[CLEANUP_COMPLETE_SUMMARY.md](./launchPlan/CLEANUP_COMPLETE_SUMMARY.md)** - Cleanup results
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL database
-- Clerk account (for authentication)
+### **guides/** - Customer Documentation 📖
+What your buyers get when they purchase:
+- **[SETUP_GUIDE.md](./guides/SETUP_GUIDE.md)** - 951 lines - Comprehensive setup
+- **[FAQ.md](./guides/FAQ.md)** - 437 lines - 30+ common questions
+- **[RBAC_USAGE.md](./guides/RBAC_USAGE.md)** - 18KB - Permission system guide
+- **[CUSTOMIZING_PERMISSIONS.md](./guides/CUSTOMIZING_PERMISSIONS.md)** - 17KB - Custom permissions
+- **[EXTENDING_TEAM_MANAGEMENT.md](./guides/EXTENDING_TEAM_MANAGEMENT.md)** - 24KB - Team features
+- **[STRIPE_CUSTOMIZATION.md](./guides/STRIPE_CUSTOMIZATION.md)** - 22KB - Billing setup
 
-### Environment Variables
-```bash
-# Database
-DATABASE_URL="postgresql://..."
+### **core/** - Developer Reference 🛠️
+Technical references for development:
+- **[llm-system-context.md](./core/llm-system-context.md)** - ⭐ AI assistant onboarding
+- **[api-reference.md](./core/api-reference.md)** - API documentation
+- **[architecture-blueprint.md](./core/architecture-blueprint.md)** - Architecture overview
+- **[enterprise-boilerplate-roadmap.md](./core/enterprise-boilerplate-roadmap.md)** - Product roadmap
+- **[coding-standards-and-workflows.md](./core/coding-standards-and-workflows.md)** - Standards
+- **[technical-workflows.md](./core/technical-workflows.md)** - Development workflows
+- **[product-vision-and-roadmap.md](./core/product-vision-and-roadmap.md)** - Vision
+- **[product-status.md](./core/product-status.md)** - Current status
+- **[LICENSING_SYSTEM.md](./core/LICENSING_SYSTEM.md)** - License database (NEW)
+- **[E2E_TESTING_GUIDE.md](./core/E2E_TESTING_GUIDE.md)** - Testing guide
+- **[E2E_TEST_STATUS.md](./core/E2E_TEST_STATUS.md)** - Test status
+- **[documentation-usage-guide.md](./core/documentation-usage-guide.md)** - Doc navigation
 
-# Clerk Authentication
-CLERK_SECRET_KEY="sk_..."
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
+### **core/architecture/** - Architecture Specs 🏗️
+- **[FileStructure-10-9-2025.md](./core/architecture/FileStructure-10-9-2025.md)** - Latest file structure
+- **[rbac-spec.md](./core/architecture/rbac-spec.md)** - RBAC specification
 
-# Optional: Error Tracking
-NEXT_PUBLIC_SENTRY_DSN="https://..."
-```
+### **testing/** - Testing Documentation 🧪
+- **[MANUAL_TESTING_GUIDE.md](./testing/MANUAL_TESTING_GUIDE.md)** - Manual test procedures
+- **[TEST_SUITE_DOCUMENTATION.md](./testing/TEST_SUITE_DOCUMENTATION.md)** - Test suite details
 
-### Installation
-```bash
-npm install
-npm run db:push    # Create database and apply schema
-npm run dev       # Start development server
-```
+### **shared/** - Shared Resources 🔗
+- **[AUTHENTICATION_OVERVIEW.md](./shared/AUTHENTICATION_OVERVIEW.md)** - Auth system overview
+- **[QUICK_TEST_GUIDE.md](./shared/QUICK_TEST_GUIDE.md)** - Quick testing reference
+- **[STRIPE_SETUP_GUIDE.md](./shared/STRIPE_SETUP_GUIDE.md)** - Stripe configuration
+- **[WEBHOOK_SETUP.md](./shared/WEBHOOK_SETUP.md)** - Webhook configuration
 
-### Database Commands
-```bash
-npm run db:push     # Apply schema changes
-npm run db:migrate  # Create new migration
-npm run db:studio   # Open Prisma Studio
-npm run db:generate # Regenerate Prisma client
-```
+### **archived/** - Historical Reference 🗄️
+30 files archived from cleanup (nothing deleted):
+- `session-summaries/` - Old session notes
+- `session-planning/` - Old planning documents
+- `old-plans/` - Superseded plans
+- `completed-tasks/` - Finished migrations
+- `architecture-history/` - Old file structures
+- `notes/` - Development notes
+- `proposedUpdates/` - Old proposals
 
-## 🔐 Security Features
+---
 
-### Multi-Tenant Isolation
-- **Database Level**: Automatic companyId scoping via Prisma middleware
-- **API Level**: Company context validation on all routes
-- **Frontend Level**: Company context provider with role-based access
+## 🚀 Quick Navigation by Task
 
-### Authentication & Authorization
-- **Clerk Integration**: Secure authentication with session management
-- **Role-Based Access**: OWNER, ADMIN, MEMBER roles per company
-- **API Protection**: All routes require authentication and company context
-- **Rate Limiting**: Built-in protection against abuse
+### "I want to launch SaaStastic"
+1. Read [`launchPlan/NEW_SESSION_SUMMARY.md`](./launchPlan/NEW_SESSION_SUMMARY.md)
+2. Follow [`launchPlan/MASTER_LAUNCH_PLAN.md`](./launchPlan/MASTER_LAUNCH_PLAN.md)
+3. Reference [`launchPlan/5_TIER_PRICING_MODEL.md`](./launchPlan/5_TIER_PRICING_MODEL.md)
 
-## 📚 Key Components
+### "I need to onboard a new AI assistant"
+1. Share [`core/llm-system-context.md`](./core/llm-system-context.md)
+2. Point to [`launchPlan/NEW_SESSION_SUMMARY.md`](./launchPlan/NEW_SESSION_SUMMARY.md)
 
-### CompanyProvider
-Manages company context and user authentication state:
-```typescript
-const { currentCompany, companies, switchCompany } = useCompany()
-```
+### "I need to help a customer set up"
+1. Send them [`guides/SETUP_GUIDE.md`](./guides/SETUP_GUIDE.md)
+2. Point to [`guides/FAQ.md`](./guides/FAQ.md) for common issues
 
-### API Middleware
-Automatic tenant isolation and authentication:
-```typescript
-export const GET = withApiMiddleware(
-  async (req, context) => {
-    const { companyId, userId } = context
-    // All queries automatically scoped to companyId
-  },
-  { requireAuth: true, requireCompany: true }
-)
-```
+### "I need to understand the architecture"
+1. Read [`core/architecture-blueprint.md`](./core/architecture-blueprint.md)
+2. Check [`core/architecture/FileStructure-10-9-2025.md`](./core/architecture/FileStructure-10-9-2025.md)
+3. Review [`core/architecture/rbac-spec.md`](./core/architecture/rbac-spec.md)
 
-### Database Schema
-Multi-tenant design with proper relationships:
-```prisma
-model Company {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  // ... audit fields
-  users     UserCompany[]
-  customers Customer[]
-}
+### "I need to customize permissions"
+1. Read [`guides/CUSTOMIZING_PERMISSIONS.md`](./guides/CUSTOMIZING_PERMISSIONS.md)
+2. Check [`guides/RBAC_USAGE.md`](./guides/RBAC_USAGE.md)
 
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  companyId String   // Automatic tenant isolation
-  company   Company  @relation(fields: [companyId])
-}
-```
+### "I need to test the app"
+1. Follow [`testing/MANUAL_TESTING_GUIDE.md`](./testing/MANUAL_TESTING_GUIDE.md)
+2. Reference [`shared/QUICK_TEST_GUIDE.md`](./shared/QUICK_TEST_GUIDE.md)
 
-## 🎯 User Flow
+---
 
-1. **Sign Up/Login** → Clerk modal authentication
-2. **Company Setup** → Create company with unique slug
-3. **Dashboard** → Company overview and management
-4. **Customer Management** → Add/view customers (company-scoped)
+## 📊 Documentation Stats
 
-## 🚦 Development Notes
+- **Total Active Docs**: 38 files
+- **Customer Guides**: 6 comprehensive guides
+- **Developer References**: 14 technical docs
+- **Launch Planning**: 8 focused documents
+- **Archived**: 30 historical files (preserved)
 
-### 🚀 Current Status
+---
 
-**✅ WORKING FEATURES:**
-- ✅ **Authentication**: Clerk integration with modal sign-in/sign-up
-- ✅ **Company Onboarding**: Create companies with unique slugs
-- ✅ **Dashboard**: Basic dashboard with company overview
-- ✅ **Database**: PostgreSQL with Prisma ORM, tenant-scoped queries
-- ✅ **API Routes**: RESTful API with proper middleware
-- ✅ **Customer Management**: Add/view customers (with company isolation)
+## ✅ Recent Updates (Oct 9, 2025)
 
-**⚠️ KNOWN ISSUES (FIXED):**
-- ✅ **Company Context for Customers**: Fixed - re-enabled tenant guard middleware
-- ✅ **Link Styling**: Fixed - added proper hover states and cursor pointers
-- ✅ **Performance**: Fixed - optimized Sentry configuration for development
+- ✅ Added licensing database schema documentation
+- ✅ Completed documentation cleanup (68% reduction)
+- ✅ Updated NEW_SESSION_SUMMARY.md with status icons
+- ✅ Archived 30 old files (nothing deleted)
+- ✅ Created clear navigation structure
 
-**🔧 RECENT FIXES:**
-- **Database Tenant Guard**: Re-enabled for proper company isolation
-- **Sentry Performance**: Reduced sampling rates in development
-- **Link Styling**: Added proper hover states and cursor pointers
-- **Slug Generation**: User-friendly short suffixes instead of timestamps
+---
 
-## 📖 Documentation
-npm install
-
-3. Install Postgres locally (Windows):
-
-   * Download installer: [https://www.postgresql.org/download/windows/](https://www.postgresql.org/download/windows/)
-   * Or via Chocolatey: `choco install postgresql`
-4. Create local DB `saas_dev` and set connection string in `.env`:
-
-```
-DATABASE_URL="postgresql://postgres:password@localhost:5432/saas_dev"
-```
-
-5. Run migrations
-
-```powershell
-npx prisma migrate dev --name init
-```
-
-6. Run dev server
-
-```powershell
-npm run dev
-```
-
-### Development Flow
-
-* **Marketing Pages:** Add to `/src/app/` (public routes)
-* **B2B Features:** Add to `/modules/` with proper company scoping
-* **Authentication:** Use Clerk hooks and company provider
-* **API Routes:** Add to `/src/app/api/` with simplified middleware
-* **Components:** Marketing components in `/components/marketing/`, shared in `/components/ui/`
-* **Database:** Use Prisma client from `/core/db/`
-* **Commit PRs:** Follow CONTRIBUTING.md guidelines
-
-### Milestones
-
-1. ✅ Scaffold unified marketing + B2B structure
-2. ✅ Implement Clerk authentication with modal flows
-3. ✅ Create company onboarding flow for new users
-4. ✅ Build marketing pages (landing, about, contact, FAQ)
-5. ✅ Implement dashboard with company-specific data
-6. ✅ Add simplified tenant isolation (companyId scoping)
-7. ✅ Create API routes with proper authentication
-8. ✅ Document unified architecture and user flows
-9. 🔄 Add comprehensive testing (Playwright E2E)
-10. 🔄 Implement observability and error tracking
-
-### Tech Stack
-
-- **Frontend:** Next.js 15, React 19, TypeScript 5
-- **Styling:** TailwindCSS with custom design system
-- **Authentication:** Clerk (Test mode for dev, Production for live)
-- **Database:** PostgreSQL with Prisma ORM
-- **Deployment:** Vercel (frontend), Neon (database)
-- **Testing:** Playwright for E2E, Jest for unit tests
-- **Monitoring:** Sentry for error tracking
-
-## Gathering Results
-
-* Repo should run locally without Docker, using Postgres install
-* Deployable to Vercel with Neon DB
-* Multi-tenant enforced by `tenantGuard`
-* Documentation supports onboarding juniors easily
-
+**Need Help?** Start with [`launchPlan/NEW_SESSION_SUMMARY.md`](./launchPlan/NEW_SESSION_SUMMARY.md) - it has everything you need!

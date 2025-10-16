@@ -1,9 +1,16 @@
 # Test Suite Documentation
 
-**Last Updated**: October 7, 2025  
+**Last Updated**: October 9, 2025  
 **Status**: All Unit Tests Passing (60/60) ✅
 
 ---
+
+## How to run all unit tests
+
+```
+npm run test
+
+```
 
 ## 📊 Test Coverage Overview
 

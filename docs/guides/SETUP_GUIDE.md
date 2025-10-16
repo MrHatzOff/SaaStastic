@@ -888,27 +888,93 @@ Before going live, verify:
 
 ---
 
+## 🤖 Using AI Coding Assistants
+
+**SaaStastic is the ONLY B2B SaaS boilerplate optimized for AI coding assistants!**
+
+### For Developers Using AI Tools (Cursor, Windsurf, Cline, GitHub Copilot)
+
+If you're using AI coding assistants, SaaStastic includes comprehensive guides to help your AI build features safely:
+
+1. **LLM Onboarding Context** → `docs/guidesForVibers/LLM_ONBOARDING_CONTEXT.md`
+   - Complete guide for AI assistants
+   - Task-based file matrix (AI knows which files to read)
+   - Security rules (prevents multi-tenant bugs)
+   - Code templates (ready to use)
+   - Verification checklists
+
+2. **Safe Customization Guide** → `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md`
+   - Learn what's safe to modify
+   - Avoid breaking updates
+   - Best practices for customization
+
+### How to Use with Your AI
+
+**At the start of each session, tell your AI**:
+```
+I'm working on SaaStastic. Please read:
+1. docs/guidesForVibers/LLM_ONBOARDING_CONTEXT.md (for context)
+2. docs/guides/SAFE_CUSTOMIZATION_GUIDE.md (for safety zones)
+
+Then help me with [your task]
+```
+
+**This ensures**:
+- ✅ AI follows multi-tenant security patterns
+- ✅ AI checks permissions on all API routes
+- ✅ AI validates input with Zod
+- ✅ AI creates files in safe zones (won't break updates)
+- ✅ Code is production-ready, not just "works locally"
+
+### Bonus Content (Professional+ Tiers)
+
+**If you purchased Professional, Agency, Enterprise, or Forever tier**:
+
+📦 **AI Workflow Toolkit** (included)
+- Location: `bonus/ai-dev-tasks/`
+- Snarktank's AI Dev Tasks system (Apache 2.0 licensed)
+- PRD generation, task lists, structured workflows
+- Works with ANY AI model
+
+📦 **Launch Success Kit** (Agency+ tiers)
+- Location: `bonus/launch-kit/`
+- Complete launch planning system
+- Generate launch plans in minutes
+- Codebase-aware tailoring
+
+**To use these**, see their respective README files in the `bonus/` folder.
+
+---
+
 ## 📚 Next Steps
 
 After setup is complete:
 
-1. **Customize Your App**
+1. **🤖 Set Up AI Assistant** (Recommended First Step)
+   - Read `docs/guidesForVibers/LLM_ONBOARDING_CONTEXT.md`
+   - Configure your AI tool (Cursor, Windsurf, etc.)
+   - Point AI to this guide for safe development
+
+2. **Customize Your App**
    - Update branding in `src/lib/site-config.ts`
    - Add your logo to `public/`
    - Customize marketing pages in `src/app/(marketing)/`
+   - **Use**: `docs/guides/SAFE_CUSTOMIZATION_GUIDE.md` for guidance
 
-2. **Configure Billing**
+3. **Configure Billing**
    - Create your pricing tiers in Stripe
    - Update prices in dashboard
 
-3. **Invite Your Team**
+4. **Invite Your Team**
    - Add team members through `/dashboard/team`
    - Assign appropriate roles
 
-4. **Read Documentation**
-   - [RBAC Usage Guide](./guides/RBAC_USAGE.md)
-   - [Customization Guide](./guides/CUSTOMIZING_PERMISSIONS.md)
-   - [API Reference](../docs/core/api-reference.md)
+5. **Read Documentation**
+   - [Safe Customization Guide](./SAFE_CUSTOMIZATION_GUIDE.md) ⭐ **Start here**
+   - [RBAC Usage Guide](./RBAC_USAGE.md)
+   - [Customization Guide](./CUSTOMIZING_PERMISSIONS.md)
+   - [API Reference](../core/api-reference.md)
+   - [AI Onboarding (for developers)](../guidesForVibers/LLM_ONBOARDING_CONTEXT.md)
 
 ---
 
@@ -947,4 +1013,4 @@ When asking for help, provide:
 
 ---
 
-*Last updated: October 8, 2025*
+*Last updated: October 12, 2025 - Added AI coding assistant guides and bonus content sections*
